@@ -79,7 +79,7 @@ Interface\FrameXML\PetitionFrame.xml
 #Interface\FrameXML\QATests\QAMenu.xml
 
 
-#Custom_AddOns_add_them_here_add_to_unload_remove_it_to_load
+#Custom_AddOns_Add_them_here_Add_hashtag_to_unload_Remove_hashtag_to_load
 
 Interface\FrameXML\EsUI\EsUI.xml
 Interface\FrameXML\EsUI\EsUI_Bindings.xml
