@@ -4,16 +4,11 @@ local mapFileName = nil;
 local mapSpanYardsX = nil;
 local mapSpanYardsY = nil;
 
--- World map tile size used by the client/server world coordinate system.
-local TILE_SIZE_YARDS = 533.333333;
-local ADT_BLOCKS = 64;
-
--- Continent extents (in tiles) from DBFilesClient WorldMapArea (areaID = 0).
--- Azeroth:  left=5   right=61  top=23 bottom=60  -> 57 x 38
--- Kalimdor: left=1   right=63  top=10 bottom=51  -> 63 x 42
-local CONTINENT_TILE_SPANS = {
-	Azeroth = { width = 57, height = 38 },
-	Kalimdor = { width = 63, height = 42 }
+-- Continent spans in yards from DBFilesClient WorldMapArea (areaID = 0).
+-- Azeroth: 57 x 38 tiles, Kalimdor: 63 x 42 tiles, tile size = 533.333333 yards.
+local CONTINENT_SPANS_YARDS = {
+	Azeroth = { width = 57 * 533.333333, height = 38 * 533.333333 },
+	Kalimdor = { width = 63 * 533.333333, height = 42 * 533.333333 }
 };
 local targetDistanceEnabled = 1;
 local TARGETDISTANCE_ADDON_CHANNEL = "_addondistance";
@@ -91,22 +86,16 @@ function TargetDistance_UpdateMapSpan()
 	end
 
 	if (string.find(mapFileName, "Azeroth") ~= nil) then
-		mapSpanYardsX = CONTINENT_TILE_SPANS.Azeroth.width * TILE_SIZE_YARDS;
-		mapSpanYardsY = CONTINENT_TILE_SPANS.Azeroth.height * TILE_SIZE_YARDS;
+		mapSpanYardsX = CONTINENT_SPANS_YARDS.Azeroth.width;
+		mapSpanYardsY = CONTINENT_SPANS_YARDS.Azeroth.height;
 		return;
 	end
 
 	if (string.find(mapFileName, "Kalimdor") ~= nil) then
-		mapSpanYardsX = CONTINENT_TILE_SPANS.Kalimdor.width * TILE_SIZE_YARDS;
-		mapSpanYardsY = CONTINENT_TILE_SPANS.Kalimdor.height * TILE_SIZE_YARDS;
+		mapSpanYardsX = CONTINENT_SPANS_YARDS.Kalimdor.width;
+		mapSpanYardsY = CONTINENT_SPANS_YARDS.Kalimdor.height;
 		return;
 	end
-
-	-- Fallback for unknown/custom maps:
-	-- use full WDT span (64 ADTs * 533.333 yards).
-	-- This is generic and usually better than disabling, but less accurate than explicit spans.
-	mapSpanYardsX = ADT_BLOCKS * TILE_SIZE_YARDS;
-	mapSpanYardsY = ADT_BLOCKS * TILE_SIZE_YARDS;
 end
 
 function TargetDistance_OnLoad()
