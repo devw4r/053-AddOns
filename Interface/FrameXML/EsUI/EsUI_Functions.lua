@@ -54,7 +54,7 @@ function EsUI.QueryServerForAuraInformation(unit)
 		local requestToken = tostring(EsUI.AuraInfo.requestSerial)
 		EsUI.AuraInfo.pendingTokens[requestUnit] = requestToken
 		EsUI.AuraInfo.activeTokens[requestUnit] = nil
-		SendChatMessage("getunitauras " .. requestUnit .. " " .. requestToken, "CHANNEL", nil, channelNum)
+		SendChatMessage("get_auras_version " .. requestUnit .. " " .. requestToken, "CHANNEL", nil, channelNum)
 	else
 		local now = GetTime and GetTime() or 0
 		if not auraChannelJoinLastAttempt or (now - auraChannelJoinLastAttempt) >= AURAS_ADDON_JOIN_RETRY_SECONDS then

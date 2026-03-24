@@ -16,6 +16,8 @@ local TARGETDISTANCE_ADDON_PASSWORD = "tP4hSCpd8vWaun";
 local TARGETDISTANCE_ADDON_JOIN_RETRY_SECONDS = 5;
 local serverDistanceYards = nil;
 local serverDistanceRequestPending = nil;
+local serverDistanceRequestToken = nil;
+local serverDistanceRequestSerial = 0;
 local serverDistanceUnavailable = nil;
 local serverDistanceChannelJoinLastAttempt = nil;
 
@@ -47,7 +49,9 @@ local function TargetDistance_RequestServerDistance()
 
 	local channelNum = TargetDistance_GetAddonChannelNum();
 	if (channelNum and channelNum > 0) then
-		SendChatMessage("getunitdistance target", "CHANNEL", nil, channelNum);
+		serverDistanceRequestSerial = serverDistanceRequestSerial + 1;
+		serverDistanceRequestToken = tostring(serverDistanceRequestSerial);
+		SendChatMessage("get_target_dist_version target " .. serverDistanceRequestToken, "CHANNEL", nil, channelNum);
 		serverDistanceRequestPending = 1;
 		return 1;
 	end
@@ -60,29 +64,55 @@ local function TargetDistance_ConsumeServerDistanceMessage(message)
 		return;
 	end
 
-	-- Addon error payload format starts with a negative code, e.g. "-3, target".
+	-- Addon error payload format starts with a negative code, e.g. "-3, target, 42".
 	if (string.sub(message, 1, 1) == "-") then
+		local _, unitId, requestToken = strsplit(", ", message);
+		if (unitId) then
+			unitId = string.lower(string.gsub(unitId, "%s+", ""));
+		end
+		if (unitId and unitId ~= "target") then
+			return;
+		end
+		if (requestToken) then
+			requestToken = string.gsub(requestToken, "%s+", "");
+		end
+		if (serverDistanceRequestToken) then
+			if (not requestToken or requestToken == "" or requestToken ~= serverDistanceRequestToken) then
+				return;
+			end
+		end
 		serverDistanceYards = nil;
 		serverDistanceUnavailable = 1;
 		serverDistanceRequestPending = nil;
+		serverDistanceRequestToken = nil;
 		return;
 	end
 
-	local commaIndex = string.find(message, ",");
-	if (not commaIndex) then
+	local unitId, distanceRaw, requestToken = strsplit(",", message);
+	if (not unitId or not distanceRaw) then
 		return;
 	end
 
-	local unitId = string.lower(string.gsub(string.sub(message, 1, commaIndex - 1), "%s+", ""));
+	unitId = string.lower(string.gsub(unitId, "%s+", ""));
 	if (unitId ~= "target") then
 		return;
 	end
 
-	local distanceValue = tonumber(string.gsub(string.sub(message, commaIndex + 1), "%s+", ""));
+	if (requestToken) then
+		requestToken = string.gsub(requestToken, "%s+", "");
+	end
+	if (serverDistanceRequestToken) then
+		if (not requestToken or requestToken == "" or requestToken ~= serverDistanceRequestToken) then
+			return;
+		end
+	end
+
+	local distanceValue = tonumber(string.gsub(distanceRaw, "%s+", ""));
 	if (distanceValue) then
 		serverDistanceYards = math.floor(distanceValue + 0.5);
 		serverDistanceUnavailable = nil;
 		serverDistanceRequestPending = nil;
+		serverDistanceRequestToken = nil;
 	end
 end
 
@@ -145,6 +175,7 @@ function TargetDistance_Toggle(toggle)
 		serverDistanceYards = nil;
 		serverDistanceUnavailable = nil;
 		serverDistanceRequestPending = nil;
+		serverDistanceRequestToken = nil;
 	end
 end
 
@@ -191,6 +222,10 @@ function TargetDistance_OnEvent()
 	if (event == "CHAT_MSG_CHANNEL") then
 		local channelName = arg4 and string.lower(arg4) or nil;
 		if (channelName and string.find(channelName, TARGETDISTANCE_ADDON_CHANNEL)) then
+			local playerName = UnitName("player");
+			if (playerName and arg2 and string.lower(arg2) ~= string.lower(playerName)) then
+				return;
+			end
 			TargetDistance_ConsumeServerDistanceMessage(arg1);
 		end
 		return;
@@ -200,6 +235,7 @@ function TargetDistance_OnEvent()
 		serverDistanceYards = nil;
 		serverDistanceUnavailable = nil;
 		serverDistanceRequestPending = nil;
+		serverDistanceRequestToken = nil;
 		serverDistanceChannelJoinLastAttempt = nil;
 	end
 
@@ -207,6 +243,7 @@ function TargetDistance_OnEvent()
 		serverDistanceYards = nil;
 		serverDistanceUnavailable = nil;
 		serverDistanceRequestPending = nil;
+		serverDistanceRequestToken = nil;
 	end
 
 	if (not targetDistanceEnabled) then
