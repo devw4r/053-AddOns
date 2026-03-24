@@ -1,4 +1,4 @@
-# Original AddOns, don't modify (scroll below)
+#Original_AddOns_dont_modify_scroll_below
 
 Interface\FrameXML\Fonts.xml
 Interface\FrameXML\BasicControls.xml
@@ -79,7 +79,7 @@ Interface\FrameXML\PetitionFrame.xml
 #Interface\FrameXML\QATests\QAMenu.xml
 
 
-# Custom AddOns, add them here (add # to unload, remove it to load)
+#Custom_AddOns_add_them_here_add_to_unload_remove_it_to_load
 
 Interface\FrameXML\EsUI\EsUI.xml
 Interface\FrameXML\EsUI\EsUI_Bindings.xml
@@ -96,4 +96,4 @@ Interface\FrameXML\EsUI\EsUI_Bindings.xml
 #Interface\FrameXML\MacroBook\MacroBook.xml
 #Interface\FrameXML\ExtendedStats\ExtendedStats.xml
 
-# End of Custom AddOn list.
+#End_of_Custom_AddOn_list

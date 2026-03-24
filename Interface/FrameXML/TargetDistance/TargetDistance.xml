@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 	<Script file="localization.lua"/>
 	<Script file="TargetDistance.lua"/>
-	<Frame name="TargetDistanceFrame" frameStrata="HIGH" toplevel="true" enableMouse="false" movable="false" parent="TargetFrame">
+	<Frame name="TargetDistanceFrame" frameStrata="HIGH" toplevel="true" enableMouse="false" movable="false" parent="UIParent">
 		<Size>
 			<AbsDimension x="126" y="26"/>
 		</Size>
