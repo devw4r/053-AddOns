@@ -44,6 +44,9 @@ function EsUIEventFrame_OnEvent(event)
 	if event == "PLAYER_ENTERING_WORLD" then
 		-- Setup
 		RefreshEsUIVariables()
+		EsUI.AuraInfo.requestSerial = 0
+		EsUI.AuraInfo.pendingTokens = {}
+		EsUI.AuraInfo.activeTokens = {}
 
 		-- Reposition QuestLogMicroButton because of the addition of TalentMicroButton
 		QuestLogMicroButton:ClearAllPoints()
@@ -80,30 +83,77 @@ function EsUIEventFrame_OnEvent(event)
 	end
 
 	if event == "PLAYER_TARGET_CHANGED" then
-		EsUI.QueryServerForAuraInformation("target")
+		EsUI.AuraInfo.units.target = {
+			buffs = {},
+			debuffs = {},
+		}
+		EsUI.AuraInfo.pendingTokens.target = nil
+		EsUI.AuraInfo.activeTokens.target = nil
+		if TargetDebuffButton_Update then
+			TargetDebuffButton_Update()
+		end
+		if UnitExists("target") then
+			EsUI.QueryServerForAuraInformation("target")
+		end
 	end
 
 	if event == "CHAT_MSG_CHANNEL" then
 		local msg, sender, language, channel, receiver, playerFlag = arg1, arg2, arg3, arg4, arg5, arg6
 
 		if msg and channel and strfind(channel, "_addonauras") then
-			if strsub(msg, 1, 2) == "-2" then -- NO_DATA
-				local error, unitID = strsplit(", ", msg) -- Space needed here for now
-				EsUI.AuraInfo.units[unitID] = {
-					buffs = {},
-					debuffs = {},
-				}
-				if (unitID == "target" or UnitIsUnit(unitID, "player")) and UnitExists("target") then
-					TargetDebuffButton_Update()
+			local playerName = UnitName("player")
+			if playerName and sender and strlower(sender) ~= strlower(playerName) then
+				return
+			end
+
+			if strsub(msg, 1, 1) == "-" then -- Addon API error payload
+				local error, unitID, requestToken = strsplit(", ", msg)
+				local expectedToken = unitID and EsUI.AuraInfo.pendingTokens[unitID] or nil
+				if expectedToken and requestToken and requestToken ~= "" and requestToken ~= expectedToken then
+					return
+				end
+				if unitID and EsUI.AuraInfo.units[unitID] then
+					if error == "-2" then -- NO_DATA
+						EsUI.AuraInfo.units[unitID] = {
+							buffs = {},
+							debuffs = {},
+						}
+						if requestToken and requestToken ~= "" then
+							EsUI.AuraInfo.activeTokens[unitID] = requestToken
+						end
+					end
+					if requestToken and requestToken ~= "" and EsUI.AuraInfo.pendingTokens[unitID] == requestToken then
+						EsUI.AuraInfo.pendingTokens[unitID] = nil
+					end
+					if error == "-2" and (unitID == "target" or UnitIsUnit(unitID, "player")) then
+						TargetDebuffButton_Update()
+					end
 				end
 			elseif tonumber(strlen(msg)) <= 2 then
 				EsUI.AuraInfo.count = tonumber(msg)
 				EsUI.AuraInfo.refresh = true
 			else
-				local unitID, spellName, harmful, texture, remaining = strsplit(",", msg)
+				local unitID, spellName, harmful, texture, remaining, requestToken = strsplit(",", msg)
 
-				if remaining and EsUI.AuraInfo.count > 0 then
-					if EsUI.AuraInfo.refresh or not EsUI.AuraInfo.units[unitID] then
+				if unitID and remaining and EsUI.AuraInfo.units[unitID] then
+					if requestToken then
+						requestToken = gsub(requestToken, "%s+", "")
+					end
+
+					local expectedToken = EsUI.AuraInfo.pendingTokens[unitID]
+					if expectedToken and expectedToken ~= "" then
+						if not requestToken or requestToken == "" or requestToken ~= expectedToken then
+							return
+						end
+					end
+
+					if requestToken and requestToken ~= "" and EsUI.AuraInfo.activeTokens[unitID] ~= requestToken then
+						EsUI.AuraInfo.units[unitID] = {
+							buffs = {},
+							debuffs = {},
+						}
+						EsUI.AuraInfo.activeTokens[unitID] = requestToken
+					elseif EsUI.AuraInfo.refresh or not EsUI.AuraInfo.units[unitID] then
 						EsUI.AuraInfo.units[unitID] = {
 							buffs = {},
 							debuffs = {},
@@ -130,9 +180,7 @@ function EsUIEventFrame_OnEvent(event)
 						end
 					end
 
-					EsUI.AuraInfo.count = EsUI.AuraInfo.count - 1
-
-					if EsUI.AuraInfo.count <= 0 and UnitExists("target") then
+					if unitID == "target" or UnitIsUnit(unitID, "player") then
 						TargetDebuffButton_Update()
 					end
 				end

@@ -174,10 +174,25 @@ if tonumber(EsUI.GameBuild) < 3494 and EsUI.C.UnitFrames.track_auras then
 		if UnitExists("target") then
 			TargetDebuffButton_Update()
 			UnitFrameManaBar_Update(TargetFrameManaBar, "target")
+		else
+			TargetDebuffButton_Update()
 		end
 	end
 
 	function TargetDebuffButton_Update()
+		if not UnitExists("target") then
+			local debuffButton, cooldown
+			for i = 1, MAX_TARGET_DEBUFFS do
+				debuffButton = getglobal("TargetFrameDebuff" .. i):GetName()
+				cooldown = getglobal(debuffButton .. "Cooldown")
+				getglobal(debuffButton).tooltip = nil
+				getglobal(debuffButton .. "Icon"):SetTexture("")
+				CooldownFrame_SetTimer(cooldown, 0, 0, 0)
+				getglobal(debuffButton):Hide()
+			end
+			return
+		end
+
 		local auraInfo = UnitIsUnit("target", "player") and EsUI.AuraInfo.units.player.debuffs or EsUI.AuraInfo.units.target.debuffs
 		local name, description, cooldown, fullDuration, start, duration
 		local debuff, debuffButton, buff, buffButton

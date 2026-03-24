@@ -34,14 +34,27 @@ local auraChannelJoinLastAttempt = nil
 
 function EsUI.QueryServerForAuraInformation(unit)
 	-- devw4r ChatAddonManager: Request Aura Information
+	if not EsUI.AuraInfo then
+		return
+	end
+
+	local requestUnit = nil
+	if unit and validUnits[unit] then
+		requestUnit = unit
+	elseif not unit then
+		requestUnit = UnitExists("target") and "target" or "player"
+	else
+		return
+	end
+
 	local channelNum = GetChannelName(AURAS_ADDON_CHANNEL)
 	if channelNum and channelNum > 0 then
 		auraChannelJoinLastAttempt = nil
-		if unit and validUnits[unit] then
-			SendChatMessage("getunitauras " .. unit, "CHANNEL", nil, channelNum)
-		else
-			SendChatMessage("getunitauras", "CHANNEL", nil, channelNum)
-		end
+		EsUI.AuraInfo.requestSerial = (EsUI.AuraInfo.requestSerial or 0) + 1
+		local requestToken = tostring(EsUI.AuraInfo.requestSerial)
+		EsUI.AuraInfo.pendingTokens[requestUnit] = requestToken
+		EsUI.AuraInfo.activeTokens[requestUnit] = nil
+		SendChatMessage("getunitauras " .. requestUnit .. " " .. requestToken, "CHANNEL", nil, channelNum)
 	else
 		local now = GetTime and GetTime() or 0
 		if not auraChannelJoinLastAttempt or (now - auraChannelJoinLastAttempt) >= AURAS_ADDON_JOIN_RETRY_SECONDS then
@@ -1855,6 +1868,9 @@ end
 EsUI.AuraInfo = {
 	count = 0,
 	refresh = false,
+	requestSerial = 0,
+	pendingTokens = {},
+	activeTokens = {},
 	units = {
 		player = {
 			buffs = {},
