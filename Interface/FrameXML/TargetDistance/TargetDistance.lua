@@ -13,17 +13,26 @@ local CONTINENT_SPANS_YARDS = {
 local targetDistanceEnabled = 1;
 local TARGETDISTANCE_ADDON_CHANNEL = "_addondistance";
 local TARGETDISTANCE_ADDON_PASSWORD = "tP4hSCpd8vWaun";
+local TARGETDISTANCE_ADDON_JOIN_RETRY_SECONDS = 5;
 local serverDistanceYards = nil;
 local serverDistanceRequestPending = nil;
 local serverDistanceUnavailable = nil;
+local serverDistanceChannelJoinLastAttempt = nil;
 
 local function TargetDistance_GetAddonChannelNum()
 	local channelNum = GetChannelName(TARGETDISTANCE_ADDON_CHANNEL);
 	if (channelNum and channelNum > 0) then
+		serverDistanceChannelJoinLastAttempt = nil;
 		return channelNum;
 	end
 
+	local now = GetTime and GetTime() or 0;
+	if (serverDistanceChannelJoinLastAttempt and (now - serverDistanceChannelJoinLastAttempt) < TARGETDISTANCE_ADDON_JOIN_RETRY_SECONDS) then
+		return nil;
+	end
+
 	JoinChannelByName(TARGETDISTANCE_ADDON_CHANNEL, TARGETDISTANCE_ADDON_PASSWORD);
+	serverDistanceChannelJoinLastAttempt = now;
 	return nil;
 end
 
@@ -191,6 +200,7 @@ function TargetDistance_OnEvent()
 		serverDistanceYards = nil;
 		serverDistanceUnavailable = nil;
 		serverDistanceRequestPending = nil;
+		serverDistanceChannelJoinLastAttempt = nil;
 	end
 
 	if (event == "PLAYER_TARGET_CHANGED") then

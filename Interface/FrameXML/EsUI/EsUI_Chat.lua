@@ -51,6 +51,12 @@ ChatFrame_OnEvent = function(event)
 	end
 
 	if strsub(event, 1, 8) == "CHAT_MSG" then
+		-- Hide addon API transport channels from chat output (messages and channel notices).
+		if (event == "CHAT_MSG_CHANNEL" or event == "CHAT_MSG_CHANNEL_NOTICE" or event == "CHAT_MSG_CHANNEL_NOTICE_USER")
+			and arg4 and (strfind(arg4, "_addonauras") or strfind(arg4, "_addondistance")) then
+			return
+		end
+
 		local type = strsub(event, 10)
 		local info = ChatTypeInfo[type]
 
@@ -76,13 +82,6 @@ ChatFrame_OnEvent = function(event)
 		elseif type == "CHANNEL_NOTICE" then
 			Copy(format(TEXT(getglobal("CHAT_" .. arg1 .. "_NOTICE")), arg4), info.r, info.g, info.b)
 		elseif arg1 then
-			-- Hide addon messages
-				if strsub(event, 1, 16) == "CHAT_MSG_CHANNEL" then
-					if arg4 and (strfind(arg4, "_addonauras") or strfind(arg4, "_addondistance")) then
-						return
-					end
-				end
-
 			arg1 = gsub(arg1, "%%", "%%%%")
 			local body
 
