@@ -3,7 +3,7 @@ local MainTargetDistance = {
 	description = "Shows distance to your current target with local map math and server fallback.",
 }
 
-local MAIN_TARGET_DISTANCE_UPDATE_RATE = 0.1
+local MAIN_TARGET_DISTANCE_UPDATE_RATE = 1
 local MAIN_TARGET_DISTANCE_FORMAT = "%d yds"
 local MAIN_TARGET_DISTANCE_PENDING_TEXT = "-- yds"
 local MAIN_TARGET_DISTANCE_CONTINENT_SPANS_YARDS = {
@@ -193,6 +193,12 @@ function MainTargetDistanceFrame_OnEvent(event)
 end
 
 function MainTargetDistanceFrame_OnUpdate(elapsed)
+	if not UnitExists or not UnitExists("target") then
+		MainTargetDistance_SetText(nil)
+		MainTargetDistanceFrame:Hide()
+		return
+	end
+
 	this.elapsed = this.elapsed + elapsed
 	if this.elapsed < MAIN_TARGET_DISTANCE_UPDATE_RATE then
 		return

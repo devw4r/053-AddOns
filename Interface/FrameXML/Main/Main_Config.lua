@@ -16,6 +16,7 @@ Main.Config = {
 		client_tweaks = 12,
 		action_bars = 13,
 		class_portraits = 14,
+		guild_frame = 15,
 	},
 	defaults = {
 		modules = {
@@ -34,6 +35,7 @@ Main.Config = {
 			client_tweaks = true,
 			action_bars = true,
 			class_portraits = true,
+			guild_frame = true,
 		},
 		settings = {
 		},

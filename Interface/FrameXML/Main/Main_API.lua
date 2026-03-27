@@ -7,7 +7,7 @@ Main.API = {
 	maxSettingsPayloadLength = 72,
 	requestSerial = 0,
 	targetDistance = {
-		requestRetrySeconds = 0.2,
+		requestRetrySeconds = 1,
 	},
 	unitAuras = {
 		requestRetrySeconds = 1,
@@ -179,6 +179,10 @@ function Main.API:RequestTargetDistance(force)
 	local now
 	local token
 
+	if not UnitExists or not UnitExists("target") then
+		return nil
+	end
+
 	state = self.targetDistance
 	now = GetTime and GetTime() or 0
 
@@ -237,8 +241,14 @@ function Main.API:RequestUnitAuras(unitId, force)
 	local state
 	local now
 	local token
+	local safeUnitId
 
 	if self.auraUnsupported then
+		return nil
+	end
+
+	safeUnitId = unitId or "target"
+	if not UnitExists or not UnitExists(safeUnitId) then
 		return nil
 	end
 
@@ -443,6 +453,11 @@ function Main.API:HandleErrorMessage(message)
 		end
 	end
 
+	if self.guildRoster and self.guildRoster.requestPending and requestToken == self.guildRoster.requestToken then
+		self.guildRoster.requestPending = nil
+		self.guildRoster.requestToken = nil
+	end
+
 	configCommandFailed = configRequestFailed or configSaveFailed
 	if errorCode == "-1" and configCommandFailed then
 		self.configUnsupported = 1
@@ -454,6 +469,117 @@ function Main.API:HandleErrorMessage(message)
 			Main_Start()
 		end
 	end
+end
+
+function Main.API:ResetGuildRoster()
+	self.guildRoster = self.guildRoster or {}
+	self.guildRoster.members = {}
+	self.guildRoster.guildName = nil
+	self.guildRoster.motd = nil
+	self.guildRoster.onlineCount = 0
+	self.guildRoster.totalCount = 0
+	self.guildRoster.requestPending = nil
+	self.guildRoster.requestToken = nil
+	self.guildRoster.lastRequestAt = nil
+	self.guildRoster.loaded = nil
+end
+
+function Main.API:RequestGuildRoster(force)
+	local state
+	local now
+	local token
+
+	self.guildRoster = self.guildRoster or {}
+	state = self.guildRoster
+	now = GetTime and GetTime() or 0
+
+	if state.requestPending and not force then
+		return nil
+	end
+	if not force and state.lastRequestAt and (now - state.lastRequestAt) < 2 then
+		return nil
+	end
+
+	token = self:CreateRequestToken()
+	if self:SendCommand("get_guild_roster", token) then
+		state.requestPending = 1
+		state.requestToken = token
+		state.lastRequestAt = now
+		return 1
+	end
+
+	return nil
+end
+
+function Main.API:GetGuildRoster()
+	self.guildRoster = self.guildRoster or {}
+	return self.guildRoster
+end
+
+function Main.API:HandleGuildRosterHeader(message)
+	local requestToken
+	local guildName
+	local motd
+	local onlineCount
+	local totalCount
+	local state
+
+	_, _, requestToken, guildName, motd, onlineCount, totalCount =
+		string.find(message, "^gr,([^,]+),([^,]*),([^,]*),([^,]*),([^,]*)$")
+	if not requestToken then
+		return nil
+	end
+
+	self.guildRoster = self.guildRoster or {}
+	state = self.guildRoster
+
+	if state.requestToken and requestToken ~= state.requestToken then
+		return 1
+	end
+
+	state.members = {}
+	state.guildName = guildName or ""
+	state.motd = motd or ""
+	state.onlineCount = tonumber(onlineCount) or 0
+	state.totalCount = tonumber(totalCount) or 0
+	state.activeToken = requestToken
+	state.requestPending = nil
+	state.requestToken = nil
+	state.loaded = 1
+
+	return 1
+end
+
+function Main.API:HandleGuildRosterMember(message)
+	local name
+	local level
+	local classId
+	local rank
+	local online
+	local state
+	local entry
+	local count
+
+	_, _, name, level, classId, rank, online =
+		string.find(message, "^gm,([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)$")
+	if not name then
+		return nil
+	end
+
+	self.guildRoster = self.guildRoster or {}
+	state = self.guildRoster
+	count = Main_ArrayCount(state.members)
+	entry = {
+		name = name,
+		level = tonumber(level) or 0,
+		classId = tonumber(classId) or 0,
+		rank = tonumber(rank) or 0,
+		online = online == "1",
+	}
+	state.members[count + 1] = entry
+	state.loaded = 1
+
+	return 1
 end
 
 function Main.API:HandleChannelMessage(message, sender, channelName)
@@ -474,6 +600,10 @@ function Main.API:HandleChannelMessage(message, sender, channelName)
 
 	if string.find(message, "^cfg,") then
 		self:HandleConfigMessage(message)
+	elseif string.find(message, "^gr,") then
+		self:HandleGuildRosterHeader(message)
+	elseif string.find(message, "^gm,") then
+		self:HandleGuildRosterMember(message)
 	elseif string.sub(message, 1, 1) == "-" then
 		self:HandleErrorMessage(message)
 	elseif not self:HandleTargetDistanceMessage(message) then
@@ -519,4 +649,10 @@ function Main.API:OnUpdate()
 			auraState.requestToken = nil
 		end
 	end)
+
+	if self.guildRoster and self.guildRoster.requestPending and self.guildRoster.lastRequestAt and
+		(now - self.guildRoster.lastRequestAt) >= 5 then
+		self.guildRoster.requestPending = nil
+		self.guildRoster.requestToken = nil
+	end
 end

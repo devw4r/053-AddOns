@@ -322,6 +322,11 @@ function MainTargetAurasFrame_OnEvent(event)
 end
 
 function MainTargetAurasFrame_OnUpdate(elapsed)
+	if not UnitExists or not UnitExists("target") then
+		MainTargetAurasFrame:Hide()
+		return
+	end
+
 	this.displayElapsed = this.displayElapsed + elapsed
 	this.refreshElapsed = this.refreshElapsed + elapsed
 

@@ -1895,6 +1895,183 @@
 		<HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD"/>
 	</Button>
 
+	<!-- Guild Tab for FriendsFrame -->
+	<Button name="FriendsFrameTab4" inherits="FriendsFrameTabTemplate" id="4" parent="FriendsFrame">
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="FriendsFrameTab3" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="3" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				this:SetText("Guild")
+			</OnLoad>
+		</Scripts>
+	</Button>
+
+	<!-- Guild Frame (embedded inside FriendsFrame as tab 4) -->
+	<Frame name="MainGuildFrame" parent="FriendsFrame" setAllPoints="true" hidden="true" enableMouse="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="MainGuildFrameMotd" inherits="GameFontHighlightSmall" justifyH="LEFT" maxLines="2">
+					<Size>
+						<AbsDimension x="290" y="28"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="24" y="-60"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainGuildFrameMemberCount" inherits="GameFontNormalSmall">
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="-40" y="-60"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Column Headers -->
+			<Button name="MainGuildFrameSortName">
+				<Size><AbsDimension x="80" y="16"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="-82"/></Offset></Anchor></Anchors>
+				<Layers><Layer level="ARTWORK"><FontString name="MainGuildFrameSortNameText" inherits="GameFontHighlightSmall" text="Name" justifyH="LEFT"/></Layer></Layers>
+				<Scripts><OnClick>MainGuildFrameSortName_OnClick()</OnClick></Scripts>
+				<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="MainGuildFrameSortLevel">
+				<Size><AbsDimension x="30" y="16"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameSortName" relativePoint="RIGHT"/></Anchors>
+				<Layers><Layer level="ARTWORK"><FontString name="MainGuildFrameSortLevelText" inherits="GameFontHighlightSmall" text="Lvl" justifyH="CENTER"/></Layer></Layers>
+				<Scripts><OnClick>MainGuildFrameSortLevel_OnClick()</OnClick></Scripts>
+				<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="MainGuildFrameSortClass">
+				<Size><AbsDimension x="60" y="16"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameSortLevel" relativePoint="RIGHT"/></Anchors>
+				<Layers><Layer level="ARTWORK"><FontString name="MainGuildFrameSortClassText" inherits="GameFontHighlightSmall" text="Class" justifyH="LEFT"/></Layer></Layers>
+				<Scripts><OnClick>MainGuildFrameSortClass_OnClick()</OnClick></Scripts>
+				<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="MainGuildFrameSortRank">
+				<Size><AbsDimension x="70" y="16"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameSortClass" relativePoint="RIGHT"/></Anchors>
+				<Layers><Layer level="ARTWORK"><FontString name="MainGuildFrameSortRankText" inherits="GameFontHighlightSmall" text="Rank" justifyH="LEFT"/></Layer></Layers>
+				<Scripts><OnClick>MainGuildFrameSortRank_OnClick()</OnClick></Scripts>
+				<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="MainGuildFrameSortOnline">
+				<Size><AbsDimension x="50" y="16"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameSortRank" relativePoint="RIGHT"/></Anchors>
+				<Layers><Layer level="ARTWORK"><FontString name="MainGuildFrameSortOnlineText" inherits="GameFontHighlightSmall" text="Status" justifyH="LEFT"/></Layer></Layers>
+				<Scripts><OnClick>MainGuildFrameSortOnline_OnClick()</OnClick></Scripts>
+				<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+
+			<!-- Roster Rows 1-13 -->
+			<Button name="MainGuildRow1" id="1">
+				<Size><AbsDimension x="290" y="16"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildFrameSortName" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-2"/></Offset></Anchor></Anchors>
+				<Layers><Layer level="ARTWORK">
+					<FontString name="MainGuildRow1Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString>
+					<FontString name="MainGuildRow1Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow1Name" relativePoint="RIGHT"/></Anchors></FontString>
+					<FontString name="MainGuildRow1Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow1Level" relativePoint="RIGHT"/></Anchors></FontString>
+					<FontString name="MainGuildRow1Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow1Class" relativePoint="RIGHT"/></Anchors></FontString>
+					<FontString name="MainGuildRow1Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow1Rank" relativePoint="RIGHT"/></Anchors></FontString>
+				</Layer></Layers>
+				<Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts>
+				<HighlightTexture name="MainGuildRow1Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="MainGuildRow2" id="2"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow1" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow2Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow2Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow2Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow2Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow2Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow2Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow2Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow2Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow2Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow2Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow3" id="3"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow2" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow3Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow3Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow3Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow3Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow3Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow3Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow3Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow3Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow3Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow3Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow4" id="4"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow3" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow4Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow4Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow4Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow4Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow4Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow4Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow4Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow4Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow4Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow4Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow5" id="5"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow4" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow5Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow5Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow5Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow5Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow5Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow5Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow5Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow5Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow5Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow5Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow6" id="6"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow5" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow6Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow6Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow6Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow6Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow6Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow6Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow6Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow6Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow6Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow6Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow7" id="7"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow6" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow7Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow7Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow7Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow7Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow7Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow7Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow7Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow7Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow7Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow7Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow8" id="8"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow7" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow8Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow8Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow8Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow8Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow8Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow8Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow8Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow8Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow8Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow8Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow9" id="9"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow8" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow9Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow9Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow9Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow9Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow9Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow9Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow9Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow9Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow9Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow9Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow10" id="10"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow9" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow10Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow10Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow10Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow10Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow10Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow10Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow10Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow10Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow10Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow10Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow11" id="11"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow10" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow11Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow11Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow11Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow11Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow11Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow11Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow11Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow11Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow11Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow11Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow12" id="12"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow11" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow12Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow12Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow12Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow12Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow12Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow12Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow12Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow12Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow12Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow12Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+			<Button name="MainGuildRow13" id="13"><Size><AbsDimension x="290" y="16"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="MainGuildRow12" relativePoint="BOTTOMLEFT"/></Anchors><Layers><Layer level="ARTWORK"><FontString name="MainGuildRow13Name" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="80" y="16"/></Size><Anchors><Anchor point="LEFT"/></Anchors></FontString><FontString name="MainGuildRow13Level" inherits="GameFontHighlightSmall" justifyH="CENTER"><Size><AbsDimension x="30" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow13Name" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow13Class" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="60" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow13Level" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow13Rank" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="70" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow13Class" relativePoint="RIGHT"/></Anchors></FontString><FontString name="MainGuildRow13Online" inherits="GameFontHighlightSmall" justifyH="LEFT"><Size><AbsDimension x="50" y="16"/></Size><Anchors><Anchor point="LEFT" relativeTo="MainGuildRow13Rank" relativePoint="RIGHT"/></Anchors></FontString></Layer></Layers><Scripts><OnClick>MainGuildRow_OnClick()</OnClick></Scripts><HighlightTexture name="MainGuildRow13Highlight" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/></Button>
+
+			<!-- Scroll Bar -->
+			<Slider name="MainGuildFrameScrollBar" orientation="VERTICAL">
+				<Size><AbsDimension x="16" y="208"/></Size>
+				<Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-36" y="-100"/></Offset></Anchor></Anchors>
+				<Scripts><OnValueChanged>MainGuildFrameScrollBar_OnValueChanged()</OnValueChanged></Scripts>
+				<ThumbTexture name="MainGuildFrameScrollBarThumb" file="Interface\Buttons\UI-ScrollBar-Knob"><Size><AbsDimension x="24" y="24"/></Size></ThumbTexture>
+			</Slider>
+
+			<!-- Bottom Buttons -->
+			<CheckButton name="MainGuildFrameOnlineToggle" inherits="UICheckButtonTemplate">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="104"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFrameOnlineToggle_OnClick()</OnClick></Scripts>
+			</CheckButton>
+			<FontString name="MainGuildFrameOnlineToggleText" inherits="GameFontHighlightSmall" text="Show online only">
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameOnlineToggle" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
+			</FontString>
+
+			<Button name="MainGuildFrameRefreshButton" inherits="UIPanelButtonTemplate" text="Refresh">
+				<Size><AbsDimension x="65" y="21"/></Size>
+				<Anchors><Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-40" y="104"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFrameRefreshButton_OnClick()</OnClick></Scripts>
+				<NormalText inherits="GameFontNormalSmall"/>
+				<HighlightText inherits="GameFontHighlightSmall"/>
+				<DisabledText inherits="GameFontDisableSmall"/>
+			</Button>
+
+			<Button name="MainGuildFramePromoteButton" inherits="UIPanelButtonTemplate" text="Promote">
+				<Size><AbsDimension x="65" y="21"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="82"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFramePromoteButton_OnClick()</OnClick></Scripts>
+				<NormalText inherits="GameFontNormalSmall"/>
+				<HighlightText inherits="GameFontHighlightSmall"/>
+				<DisabledText inherits="GameFontDisableSmall"/>
+			</Button>
+			<Button name="MainGuildFrameDemoteButton" inherits="UIPanelButtonTemplate" text="Demote">
+				<Size><AbsDimension x="65" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFramePromoteButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFrameDemoteButton_OnClick()</OnClick></Scripts>
+				<NormalText inherits="GameFontNormalSmall"/>
+				<HighlightText inherits="GameFontHighlightSmall"/>
+				<DisabledText inherits="GameFontDisableSmall"/>
+			</Button>
+			<Button name="MainGuildFrameRemoveButton" inherits="UIPanelButtonTemplate" text="Remove">
+				<Size><AbsDimension x="86" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameDemoteButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFrameRemoveButton_OnClick()</OnClick></Scripts>
+				<NormalText inherits="GameFontNormalSmall"/>
+				<HighlightText inherits="GameFontHighlightSmall"/>
+				<DisabledText inherits="GameFontDisableSmall"/>
+			</Button>
+			<Button name="MainGuildFrameInviteButton" inherits="UIPanelButtonTemplate" text="Invite">
+				<Size><AbsDimension x="86" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameRemoveButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>MainGuildFrameInviteButton_OnClick()</OnClick></Scripts>
+				<NormalText inherits="GameFontNormalSmall"/>
+				<HighlightText inherits="GameFontHighlightSmall"/>
+				<DisabledText inherits="GameFontDisableSmall"/>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>MainGuildFrame_OnLoad()</OnLoad>
+			<OnShow>MainGuildFrame_OnShow()</OnShow>
+			<OnHide>MainGuildFrame_OnHide()</OnHide>
+			<OnEvent>MainGuildFrame_OnEvent(event)</OnEvent>
+			<OnUpdate>MainGuildFrame_OnUpdate(arg1)</OnUpdate>
+		</Scripts>
+	</Frame>
+
 	<FontString name="MainBuffButtonDurationTemplate" inherits="GameFontNormalSmall" virtual="true">
 		<Anchors>
 			<Anchor point="TOP"/>
