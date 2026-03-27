@@ -1,0 +1,1938 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
+	<Script file="Main_Init.lua"/>
+	<Script file="Main_Chat.lua"/>
+	<Script file="Main_API.lua"/>
+	<Script file="Main_Config.lua"/>
+	<Script file="Main_Registry.lua"/>
+	<Script file="Main_Bundle.lua"/>
+
+	<Frame name="MainLoaderFrame">
+		<Scripts>
+			<OnLoad>
+				Main_OnLoad()
+			</OnLoad>
+			<OnEvent>
+				Main_OnEvent(event)
+			</OnEvent>
+			<OnUpdate>
+				Main_OnUpdate(arg1)
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<Button name="MainGameMenuButtonAddons" inherits="GameMenuButtonTemplate" parent="GameMenuFrame">
+		<Anchors>
+			<Anchor point="TOP" relativeTo="GameMenuButtonContinue" relativePoint="BOTTOM">
+				<Offset>
+					<AbsDimension x="0" y="-1"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				MainGameMenuButtonAddons_OnLoad()
+			</OnLoad>
+			<OnClick>
+				MainGameMenuButtonAddons_OnClick()
+			</OnClick>
+		</Scripts>
+	</Button>
+
+	<Button name="MainGameMenuButtonReload" inherits="GameMenuButtonTemplate" parent="GameMenuFrame" hidden="true">
+		<Anchors>
+			<Anchor point="TOP" relativeTo="MainGameMenuButtonAddons" relativePoint="BOTTOM">
+				<Offset>
+					<AbsDimension x="0" y="-1"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				this:SetText("Reload UI")
+			</OnLoad>
+			<OnClick>
+				ReloadUI()
+				HideUIPanel(GameMenuFrame)
+			</OnClick>
+		</Scripts>
+	</Button>
+
+	<Slider name="MainSliderTemplate" orientation="HORIZONTAL" virtual="true">
+		<Size>
+			<AbsDimension x="156" y="17"/>
+		</Size>
+		<Backdrop bgFile="Interface\Buttons\UI-SliderBar-Background" edgeFile="Interface\Buttons\UI-SliderBar-Border" tile="true">
+			<EdgeSize>
+				<AbsValue val="8"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="8"/>
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="3" right="3" top="6" bottom="6"/>
+			</BackgroundInsets>
+		</Backdrop>
+		<ThumbTexture file="Interface\Buttons\UI-SliderBar-Button-Horizontal">
+			<Size>
+				<AbsDimension x="32" y="32"/>
+			</Size>
+		</ThumbTexture>
+	</Slider>
+
+		<Frame name="MainManagerFrame" toplevel="true" frameStrata="DIALOG" movable="true" enableMouse="true" hidden="true" parent="UIParent">
+			<Size>
+				<AbsDimension x="520" y="580"/>
+			</Size>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<TitleRegion>
+			<Size>
+				<AbsDimension x="520" y="50"/>
+			</Size>
+			<Anchors>
+				<Anchor point="TOP"/>
+			</Anchors>
+		</TitleRegion>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="MainManagerFrameHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="256" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="12"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString inherits="GameFontNormal" text="Addons">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="MainManagerFrameHeader">
+							<Offset>
+								<AbsDimension x="0" y="-14"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainManagerIntroText" inherits="GameFontHighlightSmall" text="" hidden="true">
+					<Size>
+						<AbsDimension x="476" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="22" y="-50"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainManagerModulesTitle" inherits="GameFontNormalSmall" text="Modules">
+					<Size>
+						<AbsDimension x="220" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="22" y="-54"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainModuleDescription1" inherits="GameFontHighlightSmall">
+					<Size>
+						<AbsDimension x="330" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-90"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainModuleDescription2" inherits="GameFontHighlightSmall">
+					<Size>
+						<AbsDimension x="330" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-134"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainModuleDescription3" inherits="GameFontHighlightSmall">
+					<Size>
+						<AbsDimension x="330" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-178"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainModuleDescription4" inherits="GameFontHighlightSmall">
+					<Size>
+						<AbsDimension x="330" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-222"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="MainModuleDescription5" inherits="GameFontHighlightSmall">
+					<Size>
+						<AbsDimension x="330" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-266"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+					<FontString name="MainModuleDescription6" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="49" y="-310"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription7" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-354"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription8" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-398"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription9" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-442"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription10" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-486"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription11" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-530"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription12" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="49" y="-574"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainModuleDescription13" inherits="GameFontHighlightSmall">
+						<Size>
+							<AbsDimension x="330" y="24"/>
+						</Size>
+						<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="49" y="-618"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					<FontString name="MainSessionOnlyText" inherits="GameFontDisableSmall">
+						<Size>
+							<AbsDimension x="476" y="18"/>
+						</Size>
+					<Anchors>
+							<Anchor point="BOTTOMLEFT">
+								<Offset>
+										<AbsDimension x="22" y="44"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainManagerOptionsTitle" inherits="GameFontNormalSmall" text="Extra Options">
+					<Size>
+						<AbsDimension x="220" y="16"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="22" y="-208"/>
+						</Offset>
+					</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainManagerOptionsText" inherits="GameFontDisableSmall" text="" hidden="true">
+					<Size>
+						<AbsDimension x="476" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="22" y="-270"/>
+							</Offset>
+						</Anchor>
+						</Anchors>
+					</FontString>
+				<FontString name="MainManagerNumbersTitle" inherits="GameFontNormalSmall" text="Adjustments">
+						<Size>
+							<AbsDimension x="220" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="22" y="-366"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainManagerModulePageText" inherits="GameFontDisableSmall" hidden="true">
+					<Size>
+						<AbsDimension x="80" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="-54" y="-76"/>
+							</Offset>
+						</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainManagerToggleOptionsPageText" inherits="GameFontDisableSmall" hidden="true">
+					<Size>
+						<AbsDimension x="80" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="-54" y="-228"/>
+							</Offset>
+						</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainManagerNumberOptionsPageText" inherits="GameFontDisableSmall" hidden="true">
+					<Size>
+						<AbsDimension x="80" y="16"/>
+					</Size>
+					<Anchors>
+							<Anchor point="TOPRIGHT">
+								<Offset>
+									<AbsDimension x="-54" y="-430"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="MainAttributionText" inherits="GameFontDisableSmall" text="" hidden="true">
+						<Size>
+							<AbsDimension x="360" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="22" y="-68"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="MainManagerCloseButton">
+				<Size>
+					<AbsDimension x="32" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="1" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						HideUIPanel(MainManagerFrame)
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Down"/>
+				<HighlightTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Highlight" alphaMode="ADD"/>
+			</Button>
+
+			<CheckButton name="MainModuleToggle1" inherits="OptionsCheckButtonTemplate" id="1">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-74"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="MainModuleToggle2" inherits="OptionsCheckButtonTemplate" id="2">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-96"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="MainModuleToggle3" inherits="OptionsCheckButtonTemplate" id="3">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-118"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="MainModuleToggle4" inherits="OptionsCheckButtonTemplate" id="4">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-140"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="MainModuleToggle5" inherits="OptionsCheckButtonTemplate" id="5">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-162"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+				<CheckButton name="MainModuleToggle6" inherits="OptionsCheckButtonTemplate" id="6">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="258" y="-74"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle7" inherits="OptionsCheckButtonTemplate" id="7">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="258" y="-96"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+					<CheckButton name="MainModuleToggle8" inherits="OptionsCheckButtonTemplate" id="8">
+						<Anchors>
+							<Anchor point="TOPLEFT">
+								<Offset>
+									<AbsDimension x="258" y="-118"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle9" inherits="OptionsCheckButtonTemplate" id="9">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="258" y="-140"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle10" inherits="OptionsCheckButtonTemplate" id="10">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="258" y="-162"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle11" inherits="OptionsCheckButtonTemplate" id="11">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="258" y="-184"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle12" inherits="OptionsCheckButtonTemplate" id="12">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="258" y="-206"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle13" inherits="OptionsCheckButtonTemplate" id="13">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="258" y="-228"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle1" inherits="OptionsCheckButtonTemplate" id="1">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-232"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle2" inherits="OptionsCheckButtonTemplate" id="2">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-254"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle3" inherits="OptionsCheckButtonTemplate" id="3">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-276"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle4" inherits="OptionsCheckButtonTemplate" id="4">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-298"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle5" inherits="OptionsCheckButtonTemplate" id="5">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-320"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle6" inherits="OptionsCheckButtonTemplate" id="6">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-232"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle7" inherits="OptionsCheckButtonTemplate" id="7">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-254"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle8" inherits="OptionsCheckButtonTemplate" id="8">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-276"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle9" inherits="OptionsCheckButtonTemplate" id="9">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-298"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle10" inherits="OptionsCheckButtonTemplate" id="10">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-320"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle11" inherits="OptionsCheckButtonTemplate" id="11">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="18" y="-342"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainManagerOptionToggle12" inherits="OptionsCheckButtonTemplate" id="12">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+								<AbsDimension x="258" y="-342"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainManagerOptionToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<Button name="MainManagerModulesPrev" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-114" y="-72"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&lt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerModulesPrev_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerModulesNext" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-22" y="-72"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&gt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerModulesNext_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerToggleOptionsPrev" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-114" y="-224"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&lt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerToggleOptionsPrev_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerToggleOptionsNext" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-22" y="-224"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&gt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerToggleOptionsNext_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerNumberOptionsPrev" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-114" y="-424"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&lt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerNumberOptionsPrev_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerNumberOptionsNext" inherits="UIPanelButtonTemplate" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="18"/>
+					</Size>
+					<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+								<AbsDimension x="-22" y="-424"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Text>&gt;</Text>
+					<Scripts>
+						<OnClick>
+							MainManagerNumberOptionsNext_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Frame name="MainManagerNumberOption1" id="1" hidden="true">
+					<Size>
+						<AbsDimension x="224" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+									<AbsDimension x="18" y="-388"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="ARTWORK">
+							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="156" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
+								<Size>
+									<AbsDimension x="56" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="-4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="1">
+							<Size>
+								<AbsDimension x="186" y="17"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="18" y="6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnValueChanged>
+									MainManagerNumberSlider_OnValueChanged(arg1)
+								</OnValueChanged>
+							</Scripts>
+						</Slider>
+					</Frames>
+				</Frame>
+				<Frame name="MainManagerNumberOption2" id="2" hidden="true">
+					<Size>
+						<AbsDimension x="224" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+									<AbsDimension x="18" y="-436"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="ARTWORK">
+							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="156" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
+								<Size>
+									<AbsDimension x="56" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="-4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="2">
+							<Size>
+								<AbsDimension x="186" y="17"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="18" y="6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnValueChanged>
+									MainManagerNumberSlider_OnValueChanged(arg1)
+								</OnValueChanged>
+							</Scripts>
+						</Slider>
+					</Frames>
+				</Frame>
+				<Frame name="MainManagerNumberOption3" id="3" hidden="true">
+					<Size>
+						<AbsDimension x="224" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+									<AbsDimension x="266" y="-388"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="ARTWORK">
+							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="156" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
+								<Size>
+									<AbsDimension x="56" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="-4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="3">
+							<Size>
+								<AbsDimension x="186" y="17"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="18" y="6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnValueChanged>
+									MainManagerNumberSlider_OnValueChanged(arg1)
+								</OnValueChanged>
+							</Scripts>
+						</Slider>
+					</Frames>
+				</Frame>
+				<Frame name="MainManagerNumberOption4" id="4" hidden="true">
+					<Size>
+						<AbsDimension x="224" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="266" y="-436"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="ARTWORK">
+							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="156" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
+								<Size>
+									<AbsDimension x="56" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="-4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="4">
+							<Size>
+								<AbsDimension x="186" y="17"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="18" y="6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnValueChanged>
+									MainManagerNumberSlider_OnValueChanged(arg1)
+								</OnValueChanged>
+							</Scripts>
+						</Slider>
+					</Frames>
+				</Frame>
+				<Button name="MainManagerOkay" inherits="GameMenuButtonTemplate">
+					<Anchors>
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM">
+								<Offset>
+									<AbsDimension x="0" y="16"/>
+								</Offset>
+							</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnLoad>
+							this:SetText(OKAY)
+						</OnLoad>
+						<OnClick>
+							MainManagerOkayButton_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+				<Button name="MainManagerCancel" inherits="GameMenuButtonTemplate">
+					<Anchors>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOM">
+								<Offset>
+									<AbsDimension x="0" y="16"/>
+								</Offset>
+							</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnLoad>
+							this:SetText(CANCEL)
+						</OnLoad>
+						<OnClick>
+							MainManagerCancelButton_OnClick()
+						</OnClick>
+					</Scripts>
+				</Button>
+			</Frames>
+		<Scripts>
+			<OnShow>
+				MainManagerFrame_OnShow()
+			</OnShow>
+			<OnHide>
+				MainManagerFrame_OnHide()
+			</OnHide>
+		</Scripts>
+	</Frame>
+
+	<Frame name="MainActionBarArt" frameStrata="MEDIUM" parent="UIParent" hidden="true">
+		<Size>
+			<AbsDimension x="552" y="128"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOM">
+				<Offset>
+					<AbsDimension x="0" y="-2"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture name="$parentTexture0" file="Interface\FrameXML\Main\Media\ActionBarArt">
+					<Size>
+						<AbsDimension x="256" y="65"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOM">
+							<Offset>
+								<AbsDimension x="-148" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1.0" top="0.74609375" bottom="1.0"/>
+				</Texture>
+				<Texture name="$parentTexture1" file="Interface\FrameXML\Main\Media\ActionBarArt">
+					<Size>
+						<AbsDimension x="258" y="65"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOM">
+							<Offset>
+								<AbsDimension x="108" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1.0" top="0.4921875" bottom="0.74609375"/>
+				</Texture>
+				<Texture name="$parentTexture2" file="Interface\FrameXML\Main\Media\ActionBarArt">
+					<Size>
+						<AbsDimension x="256" y="65"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOM">
+							<Offset>
+								<AbsDimension x="364" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1.0" top="0.23828125" bottom="0.4921875"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="MainXPBarBackground" parent="MainMenuBar" frameStrata="LOW" hidden="true">
+		<Size>
+			<AbsDimension x="542" y="10"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOM">
+				<Offset>
+					<AbsDimension x="-237" y="-10"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture" file="Interface\Tooltips\UI-Tooltip-Background" setAllPoints="true">
+					<Color r="0" g="0" b="0" a="0.75"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="MainMicroMenuArt" parent="CharacterMicroButton" frameStrata="BACKGROUND" hidden="true">
+		<Size>
+			<AbsDimension x="512" y="128"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOM">
+				<Offset>
+					<AbsDimension x="-42" y="-4"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture" file="Interface\FrameXML\Main\Media\MicroMenuArt"/>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Button name="MainActionBarsGryphonButton" inherits="UIPanelButtonTemplate" parent="MainMenuBarArtFrame" hidden="true">
+		<Size>
+			<AbsDimension x="18" y="18"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="MainMenuBarArtFrame" relativePoint="TOPLEFT">
+				<Offset>
+					<AbsDimension x="541" y="-28"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				MainActionBarsGryphonButton_OnLoad()
+			</OnLoad>
+			<OnClick>
+				MainActionBarsGryphonButton_OnClick()
+			</OnClick>
+			<OnEnter>
+				MainActionBarsGryphonButton_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				MainActionBarsGryphonButton_OnLeave()
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<Frame name="MainClockFrame" frameStrata="HIGH" toplevel="true" enableMouse="true" movable="true" hidden="true" parent="UIParent">
+		<Size>
+			<AbsDimension x="128" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOP">
+				<Offset>
+					<AbsDimension x="0" y="-4"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<TitleRegion setAllPoints="true"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture file="Interface\Tooltips\UI-StatusBar-Border"/>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="MainClockTextButton">
+				<Size>
+					<AbsDimension x="128" y="12"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="0" y="-9"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="MainClockText" inherits="GameFontNormal">
+							<Size>
+								<AbsDimension x="128" y="12"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOP"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+					</Layers>
+					<Scripts>
+						<OnEnter>
+							MainClock_OnEnter()
+						</OnEnter>
+						<OnLeave>
+							GameTooltip:Hide()
+					</OnLeave>
+				</Scripts>
+			</Button>
+			</Frames>
+		<Scripts>
+			<OnLoad>
+				MainClock_OnLoad()
+			</OnLoad>
+			<OnUpdate>
+				MainClock_OnUpdate(arg1)
+			</OnUpdate>
+			<OnMouseDown>
+				MainClock_OnMouseDown()
+			</OnMouseDown>
+			<OnMouseUp>
+				MainClock_OnMouseUp()
+			</OnMouseUp>
+		</Scripts>
+	</Frame>
+
+	<Button name="MainOpenAllBagsButton" parent="UIParent" frameStrata="LOW" enableMouse="true" movable="false" hidden="true">
+		<Size>
+			<AbsDimension x="37" y="37"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="MainOpenAllBagsButtonIcon" file="Interface\Icons\INV_Misc_Bag_11"/>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+		<Scripts>
+			<OnLoad>
+				MainOpenAllBagsButton_OnLoad()
+			</OnLoad>
+			<OnClick>
+				MainOpenAllBagsButton_OnClick()
+			</OnClick>
+			<OnEnter>
+				MainOpenAllBagsButton_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				MainOpenAllBagsButton_OnLeave()
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<Button name="MainTalentMicroButton" inherits="MainMenuBarMicroButton" parent="MainMenuBarArtFrame" hidden="true">
+		<Anchors>
+			<Anchor point="BOTTOMLEFT" relativeTo="BugsMicroButton" relativePoint="BOTTOMRIGHT">
+				<Offset>
+					<AbsDimension x="-2" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				MainTalentMicroButton_OnLoad()
+			</OnLoad>
+			<OnClick>
+				MainTalentMicroButton_OnClick()
+			</OnClick>
+			<OnEvent>
+				MainTalentMicroButton_OnEvent(event)
+			</OnEvent>
+		</Scripts>
+	</Button>
+
+	<Frame name="MainTargetDistanceFrame" frameStrata="HIGH" toplevel="true" enableMouse="false" movable="false" hidden="true" parent="UIParent">
+		<Size>
+			<AbsDimension x="64" y="12"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT" relativeTo="TargetFrame" relativePoint="TOPRIGHT">
+				<Offset>
+					<AbsDimension x="-10" y="4"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Button name="MainTargetDistanceTextButton">
+				<Size>
+					<AbsDimension x="64" y="12"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="MainTargetDistanceText" inherits="GameFontNormalSmall">
+							<Size>
+								<AbsDimension x="64" y="12"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOP"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				MainTargetDistanceFrame_OnLoad()
+			</OnLoad>
+			<OnUpdate>
+				MainTargetDistanceFrame_OnUpdate(arg1)
+			</OnUpdate>
+			<OnEvent>
+				MainTargetDistanceFrame_OnEvent(event)
+			</OnEvent>
+		</Scripts>
+	</Frame>
+
+	<Button name="MainTargetAuraButtonTemplate" virtual="true" hidden="true">
+		<Size>
+			<AbsDimension x="22" y="22"/>
+		</Size>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon" file="Interface\Icons\Temp" setAllPoints="true"/>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture name="$parentBorder" file="Interface\Buttons\UI-Debuff-Border">
+					<Size>
+						<AbsDimension x="24" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<Color r="1.0" g="0.0" b="0.0"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Model name="$parentCooldown" scale="0.6375" inherits="CooldownFrameTemplate"/>
+			<Frame name="$parentCountFrame" frameStrata="DIALOG" enableMouse="false">
+				<Size>
+					<AbsDimension x="22" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parentCount" inherits="NumberFontNormalLarge" justifyH="CENTER" justifyV="MIDDLE">
+							<Size>
+								<AbsDimension x="22" y="22"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER">
+									<Offset>
+										<AbsDimension x="-1" y="1"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="1.0" g="0.82" b="0.0"/>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
+		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+		<Scripts>
+			<OnEnter>
+				MainTargetAuraButton_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				MainTargetAuraButton_OnLeave()
+			</OnLeave>
+			<OnUpdate>
+				MainTargetAuraButton_OnUpdate(arg1)
+			</OnUpdate>
+		</Scripts>
+	</Button>
+
+	<Frame name="MainTargetAurasFrame" frameStrata="HIGH" enableMouse="false" movable="false" hidden="true" parent="TargetFrame">
+		<Size>
+			<AbsDimension x="94" y="94"/>
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT">
+				<Offset>
+					<AbsDimension x="4" y="15"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Button name="MainTargetAura1" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura2" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura1" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura3" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura2" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura4" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura3" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura5" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainTargetAura1" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura6" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura5" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura7" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura6" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura8" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura7" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura9" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainTargetAura5" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura10" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura9" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura11" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura10" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura12" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura11" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura13" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainTargetAura9" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="-2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura14" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura13" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura15" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura14" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="MainTargetAura16" inherits="MainTargetAuraButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainTargetAura15" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				MainTargetAurasFrame_OnLoad()
+			</OnLoad>
+			<OnEvent>
+				MainTargetAurasFrame_OnEvent(event)
+			</OnEvent>
+			<OnUpdate>
+				MainTargetAurasFrame_OnUpdate(arg1)
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<Frame name="MainTutorialExtendFrame" hidden="true" parent="UIParent">
+		<Scripts>
+			<OnLoad>
+				MainTutorialExtendFrame_OnLoad()
+			</OnLoad>
+			<OnEvent>
+				MainTutorialExtendFrame_OnEvent(event)
+			</OnEvent>
+		</Scripts>
+	</Frame>
+
+	<Frame name="MainExtendedStatsFrame" parent="PaperDollFrame" hidden="true" frameStrata="DIALOG">
+		<Size>
+			<AbsDimension x="160" y="433"/>
+		</Size>
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="PaperDollFrame" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="-35" y="30"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="5" right="5" top="5" bottom="5"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="MainExtendedStatsTitle" inherits="GameFontNormalSmall" text="Extended Stats">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-8"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<ScrollFrame name="MainExtendedStatsScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="120" y="390"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="10" y="-25"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="MainExtendedStatsScrollChild">
+						<Size>
+							<AbsDimension x="120" y="665"/>
+						</Size>
+						<Layers>
+							<Layer level="OVERLAY">
+								<FontString name="MainExtendedStatsText" inherits="GameFontNormal" justifyH="LEFT">
+									<Size>
+										<AbsDimension x="120" y="665"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				MainExtendedStatsFrame_OnLoad()
+			</OnLoad>
+			<OnShow>
+				MainExtendedStatsFrame_OnShow()
+			</OnShow>
+			<OnEvent>
+				MainExtendedStatsFrame_OnEvent(event)
+			</OnEvent>
+		</Scripts>
+	</Frame>
+
+	<Frame name="MainChatCopyFrame" toplevel="true" frameStrata="DIALOG" movable="true" enableMouse="true" hidden="true" parent="UIParent">
+		<Size>
+			<AbsDimension x="540" y="340"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<TitleRegion setAllPoints="true"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="256" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="12"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString inherits="GameFontNormal" text="Chat Copy">
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parentHeader">
+							<Offset>
+								<AbsDimension x="0" y="-14"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentCloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-24" y="-24"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="486" y="252"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="16" y="-36"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<EditBox name="MainChatCopyEditBox" multiLine="true">
+						<Size>
+							<AbsDimension x="500" y="300"/>
+						</Size>
+						<Scripts>
+							<OnShow>
+								MainChatCopyEditBox_OnShow()
+							</OnShow>
+							<OnTextChanged>
+								MainChatCopyEditBox_OnTextChanged()
+							</OnTextChanged>
+							<OnEscapePressed>
+								MainChatCopyEditBox_OnEscapePressed()
+							</OnEscapePressed>
+						</Scripts>
+						<FontString inherits="ChatFontNormal"/>
+					</EditBox>
+				</ScrollChild>
+			</ScrollFrame>
+		</Frames>
+	</Frame>
+
+	<Button name="MainChatCopyButton" frameStrata="LOW" hidden="true">
+		<Size>
+			<AbsDimension x="18" y="18"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOM" relativeTo="ChatFrameMenuButton" relativePoint="TOP"/>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				MainChatCopyButton_OnClick()
+			</OnClick>
+			<OnEnter>
+				MainChatCopyButton_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				MainChatCopyButton_OnLeave()
+			</OnLeave>
+		</Scripts>
+		<NormalTexture file="Interface\Minimap\UI-Minimap-ZoomInButton-Up"/>
+		<PushedTexture file="Interface\Minimap\UI-Minimap-ZoomInButton-Down"/>
+		<DisabledTexture file="Interface\Minimap\UI-Minimap-ZoomInButton-Disabled"/>
+		<HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD"/>
+	</Button>
+
+	<FontString name="MainBuffButtonDurationTemplate" inherits="GameFontNormalSmall" virtual="true">
+		<Anchors>
+			<Anchor point="TOP"/>
+		</Anchors>
+	</FontString>
+	<Frame name="MainBuffFrame" parent="UIParent" frameStrata="LOW" toplevel="true">
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="MainBuffButton0Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton1Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton2Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton3Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton4Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton5Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton6Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton7Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton8Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton9Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton10Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton11Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton12Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton13Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton14Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton15Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton16Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton17Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton18Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton19Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton20Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton21Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton22Duration" inherits="MainBuffButtonDurationTemplate"/>
+				<FontString name="MainBuffButton23Duration" inherits="MainBuffButtonDurationTemplate"/>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				MainBuffFrame_OnLoad()
+			</OnLoad>
+		</Scripts>
+	</Frame>
+</Ui>

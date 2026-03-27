@@ -1,0 +1,5 @@
+SET main_enabled "1"
+SET main_buff_durations_enabled "1"
+SET main_instant_quest_text_enabled "1"
+SET main_clock_enabled "0"
+SET main_open_all_bags_enabled "0"
