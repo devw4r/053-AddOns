@@ -4860,7 +4860,7 @@ local MainGuildFrame = {
 	description = "Adds a guild roster panel accessible via /groster or the guild chat command.",
 }
 
-local GUILD_MAX_ROWS = 13
+local GUILD_MAX_ROWS = 10
 local GUILD_RANK_NAMES = {
 	[0] = "Guild Master",
 	[1] = "Officer",
@@ -4890,12 +4890,16 @@ local GUILD_CLASS_COLORS = {
 }
 local GUILD_DEFAULT_COLOR = { r = 0.5, g = 0.5, b = 0.5 }
 
+local GUILD_RANK_GUILD_MASTER = 0
+local GUILD_RANK_OFFICER = 1
+
 local guildSortField = "name"
 local guildSortAsc = true
 local guildShowOnline = false
 local guildScrollOffset = 0
 local guildFiltered = {}
 local guildSelectedName = nil
+local guildMotdEditMode = false
 
 local function GetClassName(classId)
 	return GUILD_CLASS_NAMES[classId] or "Unknown"
@@ -4907,6 +4911,42 @@ end
 
 local function GetRankName(rank)
 	return GUILD_RANK_NAMES[rank] or ("Rank " .. rank)
+end
+
+local function GetPlayerRank()
+	local roster = Main.API and Main.API:GetGuildRoster() or {}
+	local playerName = UnitName and UnitName("player") or nil
+	if not playerName or not roster.members then
+		return 99
+	end
+	for index = 1, Main_ArrayCount(roster.members) do
+		local member = roster.members[index]
+		if member and member.name == playerName then
+			return member.rank
+		end
+	end
+	return 99
+end
+
+local function IsGuildMaster()
+	return GetPlayerRank() == GUILD_RANK_GUILD_MASTER
+end
+
+local function IsOfficerOrHigher()
+	return GetPlayerRank() <= GUILD_RANK_OFFICER
+end
+
+local function GetSelectedMember()
+	if not guildSelectedName then
+		return nil
+	end
+	for index = 1, Main_ArrayCount(guildFiltered) do
+		local member = guildFiltered[index]
+		if member and member.name == guildSelectedName then
+			return member
+		end
+	end
+	return nil
 end
 
 local function FilterAndSort()
@@ -4970,8 +5010,8 @@ local function UpdateHeader()
 		guildName = roster.guildName or "Guild"
 	end
 
-	if MainGuildFrameTitleText then
-		MainGuildFrameTitleText:SetText(guildName)
+	if FriendsFrameTitleText then
+		FriendsFrameTitleText:SetText(guildName)
 	end
 
 	if MainGuildFrameMotd then
@@ -4987,6 +5027,87 @@ local function UpdateHeader()
 
 	if MainGuildFrameMemberCount then
 		MainGuildFrameMemberCount:SetText((roster.onlineCount or 0) .. " / " .. (roster.totalCount or 0) .. " online")
+	end
+
+	if MainGuildFrameTotalText then
+		MainGuildFrameTotalText:SetText(
+			(roster.totalCount or 0) .. " Members, " ..
+			(roster.onlineCount or 0) .. " Online"
+		)
+	end
+end
+
+local function UpdateButtons()
+	local playerRank = GetPlayerRank()
+	local selected = GetSelectedMember()
+	local hasSelection = selected ~= nil
+	local playerName = UnitName and UnitName("player") or nil
+	local isSelf = hasSelection and selected.name == playerName
+	local selectedOnline = hasSelection and selected.online
+	local canManage = IsOfficerOrHigher()
+
+	local promoteBtn = getglobal("MainGuildFramePromoteButton")
+	local demoteBtn = getglobal("MainGuildFrameDemoteButton")
+	local removeBtn = getglobal("MainGuildFrameRemoveButton")
+	local inviteBtn = getglobal("MainGuildFrameInviteButton")
+	local whisperBtn = getglobal("MainGuildFrameWhisperButton")
+	local groupInvBtn = getglobal("MainGuildFrameGroupInviteButton")
+	local motdBtn = getglobal("MainGuildFrameSetMotdButton")
+
+	if promoteBtn then
+		if canManage and hasSelection and not isSelf and selected.rank > (playerRank + 1) then
+			promoteBtn:Enable()
+		else
+			promoteBtn:Disable()
+		end
+	end
+
+	if demoteBtn then
+		if canManage and hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
+			demoteBtn:Enable()
+		else
+			demoteBtn:Disable()
+		end
+	end
+
+	if removeBtn then
+		if canManage and hasSelection and not isSelf and selected.rank > playerRank then
+			removeBtn:Enable()
+		else
+			removeBtn:Disable()
+		end
+	end
+
+	if inviteBtn then
+		if canManage then
+			inviteBtn:Enable()
+		else
+			inviteBtn:Disable()
+		end
+	end
+
+	if whisperBtn then
+		if hasSelection and not isSelf and selectedOnline then
+			whisperBtn:Enable()
+		else
+			whisperBtn:Disable()
+		end
+	end
+
+	if groupInvBtn then
+		if hasSelection and not isSelf and selectedOnline then
+			groupInvBtn:Enable()
+		else
+			groupInvBtn:Disable()
+		end
+	end
+
+	if motdBtn then
+		if IsGuildMaster() then
+			motdBtn:Enable()
+		else
+			motdBtn:Disable()
+		end
 	end
 end
 
@@ -5012,12 +5133,20 @@ local function UpdateRows()
 
 			if nameText then
 				nameText:SetText(member.name)
-				if nameText.SetTextColor then nameText:SetTextColor(cc.r, cc.g, cc.b) end
+				if member.online then
+					if nameText.SetTextColor then nameText:SetTextColor(cc.r, cc.g, cc.b) end
+				else
+					if nameText.SetTextColor then nameText:SetTextColor(0.5, 0.5, 0.5) end
+				end
 			end
 			if levelText then levelText:SetText(tostring(member.level)) end
 			if classText then
 				classText:SetText(GetClassName(member.classId))
-				if classText.SetTextColor then classText:SetTextColor(cc.r, cc.g, cc.b) end
+				if member.online then
+					if classText.SetTextColor then classText:SetTextColor(cc.r, cc.g, cc.b) end
+				else
+					if classText.SetTextColor then classText:SetTextColor(0.5, 0.5, 0.5) end
+				end
 			end
 			if rankText then rankText:SetText(GetRankName(member.rank)) end
 			if onlineText then
@@ -5029,8 +5158,10 @@ local function UpdateRows()
 					if onlineText.SetTextColor then onlineText:SetTextColor(0.5, 0.5, 0.5) end
 				end
 			end
-			if highlight then
-				if guildSelectedName and guildSelectedName == member.name then highlight:Show() else highlight:Hide() end
+			if guildSelectedName and guildSelectedName == member.name then
+				rowFrame:LockHighlight()
+			else
+				rowFrame:UnlockHighlight()
 			end
 			rowFrame:Show()
 		else
@@ -5039,7 +5170,7 @@ local function UpdateRows()
 			if classText then classText:SetText("") end
 			if rankText then rankText:SetText("") end
 			if onlineText then onlineText:SetText("") end
-			if highlight then highlight:Hide() end
+			rowFrame:UnlockHighlight()
 			rowFrame:Hide()
 		end
 	end
@@ -5063,6 +5194,7 @@ local function Refresh()
 	UpdateHeader()
 	UpdateScrollBar()
 	UpdateRows()
+	UpdateButtons()
 end
 
 local function RequestRoster()
@@ -5109,6 +5241,7 @@ function MainGuildRow_OnClick()
 	local member = guildFiltered[dataIndex]
 	guildSelectedName = member and member.name or nil
 	UpdateRows()
+	UpdateButtons()
 end
 
 function MainGuildFrameSortName_OnClick()    SetSort("name", true) end
@@ -5134,9 +5267,19 @@ function MainGuildFrameWhisperButton_OnClick()
 	end
 end
 
-function MainGuildFrameInviteButton_OnClick()
+function MainGuildFrameGroupInviteButton_OnClick()
 	if guildSelectedName and guildSelectedName ~= "" and InviteByName then
 		InviteByName(guildSelectedName)
+	end
+end
+
+function MainGuildFrameInviteButton_OnClick()
+	if GuildInviteByName then
+		local editBox = ChatFrameEditBox
+		if editBox then
+			editBox:Show()
+			editBox:SetText("/ginvite ")
+		end
 	end
 end
 
@@ -5158,8 +5301,25 @@ function MainGuildFrameDemoteButton_OnClick()
 	end
 end
 
+function MainGuildFrameSetMotdButton_OnClick()
+	if not IsGuildMaster() then
+		Main_Print("Only the Guild Master can set the MOTD.")
+		return
+	end
+	if GuildSetMOTD then
+		local editBox = ChatFrameEditBox
+		if editBox then
+			editBox:Show()
+			editBox:SetText("/gmotd ")
+		end
+	end
+end
+
 function MainGuildFrame_OnLoad()
 	this:RegisterEvent("PLAYER_ENTERING_WORLD")
+	if this.EnableMouseWheel then
+		this:EnableMouseWheel(1)
+	end
 	this:Hide()
 end
 
@@ -5214,9 +5374,6 @@ local function MainGuildFrame_HookFriendsFrame()
 			FriendsFrameTopRight:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-TopRight")
 			FriendsFrameBottomLeft:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotLeft")
 			FriendsFrameBottomRight:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotRight")
-			if FriendsFrameTitleText then
-				FriendsFrameTitleText:SetText("Guild Roster")
-			end
 			if FriendsListFrame then FriendsListFrame:Hide() end
 			if IgnoreListFrame then IgnoreListFrame:Hide() end
 			if WhoFrame then WhoFrame:Hide() end

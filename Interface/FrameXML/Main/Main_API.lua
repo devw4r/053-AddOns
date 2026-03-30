@@ -6,6 +6,12 @@ Main.API = {
 	fallbackDelaySeconds = 3,
 	maxSettingsPayloadLength = 72,
 	requestSerial = 0,
+	handshake = {
+		timeoutSeconds = 5,
+		sentAt = nil,
+		pending = nil,
+		completed = nil,
+	},
 	targetDistance = {
 		requestRetrySeconds = 1,
 	},
@@ -70,6 +76,58 @@ function Main.API:BeginStartup()
 	end
 
 	self.startedAt = GetTime and GetTime() or 0
+
+	-- Join the channel now; the handshake will be sent from OnUpdate once the channel is ready.
+	JoinChannelByName(self.channelName, self.channelPassword)
+	self.joinLastAttempt = GetTime and GetTime() or 0
+end
+
+function Main.API:SendHandshake()
+	local hs = self.handshake
+
+	if hs.completed or hs.pending or self.configUnsupported then
+		return nil
+	end
+
+	if self:SendCommand("getaddonapi") then
+		hs.pending = 1
+		hs.sentAt = GetTime and GetTime() or 0
+		return 1
+	end
+
+	return nil
+end
+
+function Main.API:HandleHandshakeFailed()
+	self.configUnsupported = 1
+	self.handshake.pending = nil
+	self.handshake.completed = nil
+
+	if not Main.Initialized then
+		Main_Start()
+	end
+end
+
+function Main.API:HandleApiVersionMessage(message)
+	local aurasVersion
+	local distanceVersion
+	local configVersion
+
+	_, _, aurasVersion, distanceVersion, configVersion =
+		string.find(message, "^api,auras=(%d+),distance=(%d+),config=(%d+)")
+	if not aurasVersion then
+		self:HandleHandshakeFailed()
+		return
+	end
+
+	self.handshake.pending = nil
+	self.handshake.completed = 1
+	self.serverApiVersions = {
+		auras = tonumber(aurasVersion) or 0,
+		distance = tonumber(distanceVersion) or 0,
+		config = tonumber(configVersion) or 0,
+	}
+
 	self:RequestConfig(1)
 end
 
@@ -489,6 +547,10 @@ function Main.API:RequestGuildRoster(force)
 	local now
 	local token
 
+	if self.configUnsupported then
+		return nil
+	end
+
 	self.guildRoster = self.guildRoster or {}
 	state = self.guildRoster
 	now = GetTime and GetTime() or 0
@@ -598,7 +660,9 @@ function Main.API:HandleChannelMessage(message, sender, channelName)
 		return
 	end
 
-	if string.find(message, "^cfg,") then
+	if string.find(message, "^api,") then
+		self:HandleApiVersionMessage(message)
+	elseif string.find(message, "^cfg,") then
 		self:HandleConfigMessage(message)
 	elseif string.find(message, "^gr,") then
 		self:HandleGuildRosterHeader(message)
@@ -616,6 +680,7 @@ function Main.API:OnUpdate()
 	local distanceState
 	local unitId
 	local auraState
+	local hs
 
 	if not self.startedAt then
 		return
@@ -623,10 +688,34 @@ function Main.API:OnUpdate()
 
 	now = GetTime and GetTime() or 0
 
+	-- Handshake phase: wait for channel, send handshake, wait for response.
+	hs = self.handshake
+	if not hs.completed and not self.configUnsupported then
+		-- Total timeout: if handshake hasn't completed within timeoutSeconds from startup, give up.
+		if (now - self.startedAt) >= hs.timeoutSeconds then
+			if not hs.completed then
+				self:HandleHandshakeFailed()
+			end
+		elseif hs.pending then
+			-- Handshake was sent, waiting for response (timeout handled above).
+		else
+			-- Channel not ready yet or handshake not sent; try to send.
+			self:SendHandshake()
+		end
+
+		-- Start local features while waiting.
+		if not Main.Initialized and (now - self.startedAt) >= self.fallbackDelaySeconds then
+			Main_Start()
+		end
+		return
+	end
+
+	-- Fallback startup if config takes too long.
 	if not Main.Initialized and (now - self.startedAt) >= self.fallbackDelaySeconds then
 		Main_Start()
 	end
 
+	-- Config request retry (only after handshake succeeded).
 	if self.requestPending and self.lastRequestAt and (now - self.lastRequestAt) >= self.requestRetrySeconds then
 		self.requestPending = nil
 	end
@@ -635,6 +724,7 @@ function Main.API:OnUpdate()
 		self:RequestConfig()
 	end
 
+	-- Target distance timeout.
 	distanceState = self.targetDistance
 	if distanceState.requestPending and distanceState.lastRequestAt and
 		(now - distanceState.lastRequestAt) >= distanceState.requestRetrySeconds then
@@ -642,6 +732,7 @@ function Main.API:OnUpdate()
 		distanceState.requestToken = nil
 	end
 
+	-- Aura request timeouts.
 	Main_ForEach(self.unitAuras.states, function(unitId, auraState)
 		if auraState.requestPending and auraState.lastRequestAt and
 			(now - auraState.lastRequestAt) >= self.unitAuras.requestRetrySeconds then
@@ -650,6 +741,7 @@ function Main.API:OnUpdate()
 		end
 	end)
 
+	-- Guild roster request timeout.
 	if self.guildRoster and self.guildRoster.requestPending and self.guildRoster.lastRequestAt and
 		(now - self.guildRoster.lastRequestAt) >= 5 then
 		self.guildRoster.requestPending = nil

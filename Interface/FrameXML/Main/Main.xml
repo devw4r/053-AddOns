@@ -1912,7 +1912,7 @@
 	</Button>
 
 	<!-- Guild Frame (embedded inside FriendsFrame as tab 4) -->
-	<Frame name="MainGuildFrame" parent="FriendsFrame" setAllPoints="true" hidden="true" enableMouse="true">
+	<Frame name="MainGuildFrame" parent="FriendsFrame" setAllPoints="true" hidden="true">
 		<Layers>
 			<Layer level="ARTWORK">
 				<FontString name="MainGuildFrameMotd" inherits="GameFontHighlightSmall" justifyH="LEFT" maxLines="2">
@@ -2011,56 +2011,85 @@
 				<ThumbTexture name="MainGuildFrameScrollBarThumb" file="Interface\Buttons\UI-ScrollBar-Knob"><Size><AbsDimension x="24" y="24"/></Size></ThumbTexture>
 			</Slider>
 
-			<!-- Bottom Buttons -->
+			<!-- Bottom Controls -->
 			<CheckButton name="MainGuildFrameOnlineToggle" inherits="UICheckButtonTemplate">
 				<Size><AbsDimension x="24" y="24"/></Size>
-				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="104"/></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="129"/></Offset></Anchor></Anchors>
 				<Scripts><OnClick>MainGuildFrameOnlineToggle_OnClick()</OnClick></Scripts>
 			</CheckButton>
 			<FontString name="MainGuildFrameOnlineToggleText" inherits="GameFontHighlightSmall" text="Show online only">
 				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameOnlineToggle" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
 			</FontString>
+			<FontString name="MainGuildFrameTotalText" inherits="GameFontNormalSmall" justifyH="LEFT">
+				<Anchors><Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-40" y="135"/></Offset></Anchor></Anchors>
+			</FontString>
 
-			<Button name="MainGuildFrameRefreshButton" inherits="UIPanelButtonTemplate" text="Refresh">
+			<!-- Row 1 (y=107): Promote | Demote | Remove | Invite -->
+			<Button name="MainGuildFramePromoteButton" inherits="UIPanelButtonTemplate">
 				<Size><AbsDimension x="65" y="21"/></Size>
-				<Anchors><Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-40" y="104"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>MainGuildFrameRefreshButton_OnClick()</OnClick></Scripts>
-				<NormalText inherits="GameFontNormalSmall"/>
-				<HighlightText inherits="GameFontHighlightSmall"/>
-				<DisabledText inherits="GameFontDisableSmall"/>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="107"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnLoad>this:SetText("Promote")</OnLoad>
+					<OnClick>MainGuildFramePromoteButton_OnClick()</OnClick>
+				</Scripts>
 			</Button>
-
-			<Button name="MainGuildFramePromoteButton" inherits="UIPanelButtonTemplate" text="Promote">
-				<Size><AbsDimension x="65" y="21"/></Size>
-				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="82"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>MainGuildFramePromoteButton_OnClick()</OnClick></Scripts>
-				<NormalText inherits="GameFontNormalSmall"/>
-				<HighlightText inherits="GameFontHighlightSmall"/>
-				<DisabledText inherits="GameFontDisableSmall"/>
-			</Button>
-			<Button name="MainGuildFrameDemoteButton" inherits="UIPanelButtonTemplate" text="Demote">
+			<Button name="MainGuildFrameDemoteButton" inherits="UIPanelButtonTemplate">
 				<Size><AbsDimension x="65" y="21"/></Size>
 				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFramePromoteButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>MainGuildFrameDemoteButton_OnClick()</OnClick></Scripts>
-				<NormalText inherits="GameFontNormalSmall"/>
-				<HighlightText inherits="GameFontHighlightSmall"/>
-				<DisabledText inherits="GameFontDisableSmall"/>
+				<Scripts>
+					<OnLoad>this:SetText("Demote")</OnLoad>
+					<OnClick>MainGuildFrameDemoteButton_OnClick()</OnClick>
+				</Scripts>
 			</Button>
-			<Button name="MainGuildFrameRemoveButton" inherits="UIPanelButtonTemplate" text="Remove">
+			<Button name="MainGuildFrameRemoveButton" inherits="UIPanelButtonTemplate">
 				<Size><AbsDimension x="86" y="21"/></Size>
 				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameDemoteButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>MainGuildFrameRemoveButton_OnClick()</OnClick></Scripts>
-				<NormalText inherits="GameFontNormalSmall"/>
-				<HighlightText inherits="GameFontHighlightSmall"/>
-				<DisabledText inherits="GameFontDisableSmall"/>
+				<Scripts>
+					<OnLoad>this:SetText("Remove")</OnLoad>
+					<OnClick>MainGuildFrameRemoveButton_OnClick()</OnClick>
+				</Scripts>
 			</Button>
-			<Button name="MainGuildFrameInviteButton" inherits="UIPanelButtonTemplate" text="Invite">
+			<Button name="MainGuildFrameInviteButton" inherits="UIPanelButtonTemplate">
 				<Size><AbsDimension x="86" y="21"/></Size>
 				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameRemoveButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>MainGuildFrameInviteButton_OnClick()</OnClick></Scripts>
-				<NormalText inherits="GameFontNormalSmall"/>
-				<HighlightText inherits="GameFontHighlightSmall"/>
-				<DisabledText inherits="GameFontDisableSmall"/>
+				<Scripts>
+					<OnLoad>this:SetText("Invite")</OnLoad>
+					<OnClick>MainGuildFrameInviteButton_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Row 2 (y=85): Whisper | Group Invite | Set MOTD | Refresh -->
+			<Button name="MainGuildFrameWhisperButton" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="65" y="21"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="19" y="85"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnLoad>this:SetText("Whisper")</OnLoad>
+					<OnClick>MainGuildFrameWhisperButton_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MainGuildFrameGroupInviteButton" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="86" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameWhisperButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnLoad>this:SetText("Group Inv")</OnLoad>
+					<OnClick>MainGuildFrameGroupInviteButton_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MainGuildFrameSetMotdButton" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="86" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameGroupInviteButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnLoad>this:SetText("Set MOTD")</OnLoad>
+					<OnClick>MainGuildFrameSetMotdButton_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MainGuildFrameRefreshButton" inherits="UIPanelButtonTemplate">
+				<Size><AbsDimension x="65" y="21"/></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="MainGuildFrameSetMotdButton" relativePoint="RIGHT"><Offset><AbsDimension x="7" y="0"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnLoad>this:SetText("Refresh")</OnLoad>
+					<OnClick>MainGuildFrameRefreshButton_OnClick()</OnClick>
+				</Scripts>
 			</Button>
 		</Frames>
 		<Scripts>
