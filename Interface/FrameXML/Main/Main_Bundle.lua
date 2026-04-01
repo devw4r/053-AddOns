@@ -865,33 +865,8 @@ function Main.RefreshManager()
 	end
 
 	if MainSessionOnlyText then
-		if Main.Config.backend == "server" then
-			MainSessionOnlyText:SetText("")
-		elseif Main.API and Main.API.configUnsupported then
-			MainSessionOnlyText:SetText("Server addon settings API is unavailable. Using local defaults for this session.")
-		elseif not Main.Initialized then
-			MainSessionOnlyText:SetText("Waiting for character addon settings from the server.")
-		elseif Main.IsSessionOnlyConfig() then
-			MainSessionOnlyText:SetText("Using local defaults for this session while server settings are unavailable.")
-		else
-			MainSessionOnlyText:SetText("")
-		end
-	end
-
-	for i = 1, Main.GetModuleCount() do
-		module = Main.GetModuleByIndex(i)
-		if module and module.reloadRequired and Main.GetRuntimeModuleEnabled and Main.GetRuntimeModuleEnabled(module.id) ~= nil then
-			if Main.GetRuntimeModuleEnabled(module.id) ~= Main_GetManagerConfiguredModuleEnabled(module.id) then
-				if MainSessionOnlyText then
-					if MainManagerFrame and MainManagerFrame:IsVisible() and Main.ManagerDraftConfig then
-						MainSessionOnlyText:SetText("Changes are queued until you press Okay.")
-					else
-						MainSessionOnlyText:SetText("Some layout changes apply after restarting the client.")
-					end
-				end
-				break
-			end
-		end
+		MainSessionOnlyText:SetText("")
+		MainSessionOnlyText:Hide()
 	end
 
 	if MainManagerIntroText then
@@ -1035,6 +1010,7 @@ function Main.RefreshManager()
 
 		if optionFrame then
 			if optionModule and option then
+				local optionDisabled = option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule)
 				optionLabel = getglobal(optionFrame:GetName() .. "Label")
 				valueLabel = getglobal(optionFrame:GetName() .. "Value")
 				slider = getglobal(optionFrame:GetName() .. "Slider")
@@ -1042,6 +1018,11 @@ function Main.RefreshManager()
 
 				if optionLabel then
 					optionLabel:SetText(option.label or option.key or "Value")
+					if optionDisabled then
+						optionLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						optionLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 				Main_SetManagerNumberOptionDisplay(i, option, optionValue)
 				if slider then
@@ -1050,7 +1031,21 @@ function Main.RefreshManager()
 					slider:SetValueStep(Main_ToNumber(option.step, 1) or 1)
 					slider:SetValue(optionValue)
 					Main.ManagerSyncing = nil
+					if optionDisabled then
+						slider:EnableMouse(0)
+						slider:SetAlpha(0.4)
+					else
+						slider:EnableMouse(1)
+						slider:SetAlpha(1)
+					end
 					slider:Show()
+				end
+				if valueLabel then
+					if optionDisabled then
+						valueLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						valueLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 				optionFrame:Show()
 			else
@@ -1073,6 +1068,7 @@ local MainBuffDurations = {
 			type = "toggle",
 			key = "buff_durations_blink_white",
 			label = "Invert warning color",
+			managerOrder = 6,
 			defaultValue = true,
 		},
 	},
@@ -1259,13 +1255,15 @@ local MainUnitFrames = {
 			type = "toggle",
 			key = "unitframes_statusbar_text",
 			label = "Show unit status text",
+			managerOrder = 7,
 			defaultValue = true,
 		},
 		{
 			type = "number",
 			key = "unitframes_x_offset",
-			label = "Horizontal offset",
+			label = "Unit Frames Horizontal Offset",
 			managerOrder = 2,
+			requiresModule = "unit_frames",
 			defaultValue = -250,
 			step = 10,
 			minValue = -400,
@@ -1274,8 +1272,9 @@ local MainUnitFrames = {
 		{
 			type = "number",
 			key = "unitframes_y_offset",
-			label = "Vertical offset",
+			label = "Unit Frames Vertical Offset",
 			managerOrder = 1,
+			requiresModule = "unit_frames",
 			defaultValue = 320,
 			step = 10,
 			minValue = 150,
@@ -2744,13 +2743,15 @@ local MainClockModule = {
 			type = "toggle",
 			key = "clock_twenty_four_hour",
 			label = "Use 24-hour time",
+			managerOrder = 8,
 			defaultValue = false,
 		},
 		{
 			type = "number",
 			key = "clock_offset_hours",
-			label = "Time offset",
+			label = "Clock Time Offset",
 			managerOrder = 3,
+			requiresModule = "clock",
 			defaultValue = 0,
 			step = 0.5,
 			minValue = -12,
@@ -3039,6 +3040,7 @@ local MainTalentButton = {
 			type = "toggle",
 			key = "actionbars_show_talent_button",
 			label = "Show talents button",
+			managerOrder = 9,
 			defaultValue = true,
 			requiresModule = false,
 		},
@@ -4820,6 +4822,7 @@ local MainClientTweaks = {
 			type = "toggle",
 			key = "client_auto_loot",
 			label = "Auto-loot",
+			managerOrder = 11,
 			defaultValue = true,
 		},
 	},
@@ -4851,6 +4854,106 @@ end
 Main.RegisterModule("client_tweaks", MainClientTweaks)
 
 -- END ClientTweaks.lua
+
+-- BEGIN ClassPortraits.lua
+local MainClassPortraits = {
+	name = "Class Portraits",
+	description = "Replaces player and target 3D portraits with class icon circles.",
+}
+
+local MAIN_CLASS_PORTRAITS_TEXTURE = "Interface\\FrameXML\\Main\\Media\\UI-Classes-Circles"
+
+local mainClassPortraitsOriginalUnitFrameUpdate = nil
+local mainClassPortraitsOriginalUnitFrameOnEvent = nil
+local mainClassPortraitsOriginalPlayerFrameOnEvent = nil
+local mainClassPortraitsOriginalTargetFrameUpdate = nil
+
+local function MainClassPortraits_IsEnabled()
+	return Main.IsModuleEnabled("class_portraits")
+end
+
+local function MainClassPortraits_RefreshPortrait(frame)
+	local className
+	local textureCoords
+
+	if not frame or not frame.portrait or not frame.unit then
+		return
+	end
+
+	if MainClassPortraits_IsEnabled() and UnitIsPlayer(frame.unit) and not UnitIsCharmed(frame.unit) then
+		className = UnitClass(frame.unit)
+		textureCoords = className and CLASS_ICON_TCOORDS[strupper(className)] or nil
+		if textureCoords then
+			frame.portrait:SetTexture(MAIN_CLASS_PORTRAITS_TEXTURE)
+			frame.portrait:SetTexCoord(textureCoords[1], textureCoords[2], textureCoords[3], textureCoords[4])
+			return
+		end
+	end
+
+	SetPortraitTexture(frame.portrait, frame.unit)
+	frame.portrait:SetTexCoord(0, 1, 0, 1)
+end
+
+local function MainClassPortraits_RefreshAll()
+	MainClassPortraits_RefreshPortrait(PlayerFrame)
+	MainClassPortraits_RefreshPortrait(TargetFrame)
+end
+
+local function MainClassPortraits_InstallHooks()
+	if mainClassPortraitsOriginalUnitFrameUpdate then
+		return
+	end
+
+	mainClassPortraitsOriginalUnitFrameUpdate = UnitFrame_Update
+	UnitFrame_Update = function()
+		mainClassPortraitsOriginalUnitFrameUpdate()
+		MainClassPortraits_RefreshPortrait(this)
+	end
+
+	mainClassPortraitsOriginalUnitFrameOnEvent = UnitFrame_OnEvent
+	UnitFrame_OnEvent = function(event)
+		mainClassPortraitsOriginalUnitFrameOnEvent(event)
+		MainClassPortraits_RefreshPortrait(this)
+	end
+
+	if PlayerFrame_OnEvent then
+		mainClassPortraitsOriginalPlayerFrameOnEvent = PlayerFrame_OnEvent
+		PlayerFrame_OnEvent = function(event)
+			mainClassPortraitsOriginalPlayerFrameOnEvent(event)
+			MainClassPortraits_RefreshPortrait(PlayerFrame)
+		end
+	end
+
+	if TargetFrame_Update then
+		mainClassPortraitsOriginalTargetFrameUpdate = TargetFrame_Update
+		TargetFrame_Update = function()
+			mainClassPortraitsOriginalTargetFrameUpdate()
+			MainClassPortraits_RefreshPortrait(TargetFrame)
+		end
+	end
+end
+
+function MainClassPortraits:Init()
+	MainClassPortraits_InstallHooks()
+	Main.RegisterEventHandler("PLAYER_ENTERING_WORLD", "class_portraits", function()
+		MainClassPortraits_RefreshAll()
+	end)
+	Main.RegisterEventHandler("PLAYER_TARGET_CHANGED", "class_portraits_target", function()
+		MainClassPortraits_RefreshPortrait(TargetFrame)
+	end)
+end
+
+function MainClassPortraits:Enable()
+	MainClassPortraits_RefreshAll()
+end
+
+function MainClassPortraits:Disable()
+	MainClassPortraits_RefreshAll()
+end
+
+Main.RegisterModule("class_portraits", MainClassPortraits)
+
+-- END ClassPortraits.lua
 
 -- BEGIN GuildFrame.lua
 ;(function()
@@ -4893,13 +4996,12 @@ local GUILD_DEFAULT_COLOR = { r = 0.5, g = 0.5, b = 0.5 }
 local GUILD_RANK_GUILD_MASTER = 0
 local GUILD_RANK_OFFICER = 1
 
-local guildSortField = "name"
+local guildSortField = "rank"
 local guildSortAsc = true
-local guildShowOnline = false
+local guildShowOffline = false
 local guildScrollOffset = 0
 local guildFiltered = {}
 local guildSelectedName = nil
-local guildMotdEditMode = false
 
 local function GetClassName(classId)
 	return GUILD_CLASS_NAMES[classId] or "Unknown"
@@ -4956,7 +5058,7 @@ local function FilterAndSort()
 
 	for index = 1, Main_ArrayCount(roster.members) do
 		local member = roster.members[index]
-		if member and (not guildShowOnline or member.online) then
+		if member and (guildShowOffline or member.online) then
 			count = count + 1
 			entries[count] = member
 		end
@@ -4986,6 +5088,12 @@ local function FilterAndSort()
 		end
 
 		if leftVal == rightVal then
+			-- Secondary sort: rank then name
+			local lr = left.rank or 99
+			local rr = right.rank or 99
+			if lr ~= rr then
+				return lr < rr
+			end
 			return (left.name or "") < (right.name or "")
 		end
 
@@ -5014,25 +5122,29 @@ local function UpdateHeader()
 		FriendsFrameTitleText:SetText(guildName)
 	end
 
-	if MainGuildFrameMotd then
+	local motdLabel = getglobal("MainGuildFrameMotdLabel")
+	if motdLabel then
+		motdLabel:SetText("Guild Message Of The Day:")
+	end
+
+	local motdText = getglobal("MainGuildFrameMotd")
+	if motdText then
 		local motd = roster.motd or ""
 		if motd ~= "" then
-			MainGuildFrameMotd:SetText("MOTD: " .. motd)
-			MainGuildFrameMotd:Show()
+			motdText:SetText(motd)
+			motdText:Show()
 		else
-			MainGuildFrameMotd:SetText("")
-			MainGuildFrameMotd:Hide()
+			motdText:SetText("")
+			motdText:Show()
 		end
 	end
 
-	if MainGuildFrameMemberCount then
-		MainGuildFrameMemberCount:SetText((roster.onlineCount or 0) .. " / " .. (roster.totalCount or 0) .. " online")
-	end
-
 	if MainGuildFrameTotalText then
+		local total = roster.totalCount or 0
+		local online = roster.onlineCount or 0
+		local memberWord = total == 1 and "Guild Member" or "Guild Members"
 		MainGuildFrameTotalText:SetText(
-			(roster.totalCount or 0) .. " Members, " ..
-			(roster.onlineCount or 0) .. " Online"
+			"|cFFFFFFFF" .. total .. "|r " .. memberWord .. " (|cFFFFFFFF" .. online .. "|r |cFF33FF33Online|r)"
 		)
 	end
 end
@@ -5054,35 +5166,61 @@ local function UpdateButtons()
 	local groupInvBtn = getglobal("MainGuildFrameGroupInviteButton")
 	local motdBtn = getglobal("MainGuildFrameSetMotdButton")
 
+	-- Show/hide officer buttons based on rank
 	if promoteBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > (playerRank + 1) then
-			promoteBtn:Enable()
+		if canManage then
+			promoteBtn:Show()
+			if hasSelection and not isSelf and selected.rank > (playerRank + 1) then
+				promoteBtn:Enable()
+			else
+				promoteBtn:Disable()
+			end
 		else
-			promoteBtn:Disable()
+			promoteBtn:Hide()
 		end
 	end
 
 	if demoteBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
-			demoteBtn:Enable()
+		if canManage then
+			demoteBtn:Show()
+			if hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
+				demoteBtn:Enable()
+			else
+				demoteBtn:Disable()
+			end
 		else
-			demoteBtn:Disable()
+			demoteBtn:Hide()
 		end
 	end
 
 	if removeBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > playerRank then
-			removeBtn:Enable()
+		if canManage then
+			removeBtn:Show()
+			if hasSelection and not isSelf and selected.rank > playerRank then
+				removeBtn:Enable()
+			else
+				removeBtn:Disable()
+			end
 		else
-			removeBtn:Disable()
+			removeBtn:Hide()
 		end
 	end
 
 	if inviteBtn then
 		if canManage then
+			inviteBtn:Show()
 			inviteBtn:Enable()
 		else
-			inviteBtn:Disable()
+			inviteBtn:Hide()
+		end
+	end
+
+	if motdBtn then
+		if IsGuildMaster() then
+			motdBtn:Show()
+			motdBtn:Enable()
+		else
+			motdBtn:Hide()
 		end
 	end
 
@@ -5099,14 +5237,6 @@ local function UpdateButtons()
 			groupInvBtn:Enable()
 		else
 			groupInvBtn:Disable()
-		end
-	end
-
-	if motdBtn then
-		if IsGuildMaster() then
-			motdBtn:Enable()
-		else
-			motdBtn:Disable()
 		end
 	end
 end
@@ -5126,7 +5256,6 @@ local function UpdateRows()
 		local classText = getglobal(prefix .. "Class")
 		local rankText = getglobal(prefix .. "Rank")
 		local onlineText = getglobal(prefix .. "Online")
-		local highlight = getglobal(prefix .. "Highlight")
 
 		if member then
 			local cc = GetClassColor(member.classId)
@@ -5251,13 +5380,9 @@ function MainGuildFrameSortRank_OnClick()    SetSort("rank", true) end
 function MainGuildFrameSortOnline_OnClick()  SetSort("online", true) end
 
 function MainGuildFrameOnlineToggle_OnClick()
-	guildShowOnline = not guildShowOnline
+	guildShowOffline = not guildShowOffline
 	guildScrollOffset = 0
 	Refresh()
-end
-
-function MainGuildFrameRefreshButton_OnClick()
-	RequestRoster()
 end
 
 function MainGuildFrameWhisperButton_OnClick()
@@ -5320,6 +5445,14 @@ function MainGuildFrame_OnLoad()
 	if this.EnableMouseWheel then
 		this:EnableMouseWheel(1)
 	end
+
+	-- Set toggle label text
+	local toggleText = getglobal("MainGuildFrameOnlineToggleText")
+	if toggleText then
+		toggleText:SetText("Show Offline Members")
+	end
+
+
 	this:Hide()
 end
 
@@ -5370,10 +5503,10 @@ local function MainGuildFrame_HookFriendsFrame()
 	FriendsFrame_Update = function()
 		local guildPanel = getglobal("MainGuildFrame")
 		if FriendsFrame.selectedTab == 4 then
-			FriendsFrameTopLeft:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-TopLeft")
-			FriendsFrameTopRight:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-TopRight")
-			FriendsFrameBottomLeft:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotLeft")
-			FriendsFrameBottomRight:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotRight")
+			FriendsFrameTopLeft:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-TopLeft")
+			FriendsFrameTopRight:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-TopRight")
+			FriendsFrameBottomLeft:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-BottomLeft")
+			FriendsFrameBottomRight:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-BottomRight")
 			if FriendsListFrame then FriendsListFrame:Hide() end
 			if IgnoreListFrame then IgnoreListFrame:Hide() end
 			if WhoFrame then WhoFrame:Hide() end

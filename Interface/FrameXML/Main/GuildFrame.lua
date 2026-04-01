@@ -38,13 +38,12 @@ local GUILD_DEFAULT_COLOR = { r = 0.5, g = 0.5, b = 0.5 }
 local GUILD_RANK_GUILD_MASTER = 0
 local GUILD_RANK_OFFICER = 1
 
-local guildSortField = "name"
+local guildSortField = "rank"
 local guildSortAsc = true
-local guildShowOnline = false
+local guildShowOffline = false
 local guildScrollOffset = 0
 local guildFiltered = {}
 local guildSelectedName = nil
-local guildMotdEditMode = false
 
 local function GetClassName(classId)
 	return GUILD_CLASS_NAMES[classId] or "Unknown"
@@ -101,7 +100,7 @@ local function FilterAndSort()
 
 	for index = 1, Main_ArrayCount(roster.members) do
 		local member = roster.members[index]
-		if member and (not guildShowOnline or member.online) then
+		if member and (guildShowOffline or member.online) then
 			count = count + 1
 			entries[count] = member
 		end
@@ -131,6 +130,12 @@ local function FilterAndSort()
 		end
 
 		if leftVal == rightVal then
+			-- Secondary sort: rank then name
+			local lr = left.rank or 99
+			local rr = right.rank or 99
+			if lr ~= rr then
+				return lr < rr
+			end
 			return (left.name or "") < (right.name or "")
 		end
 
@@ -159,25 +164,29 @@ local function UpdateHeader()
 		FriendsFrameTitleText:SetText(guildName)
 	end
 
-	if MainGuildFrameMotd then
+	local motdLabel = getglobal("MainGuildFrameMotdLabel")
+	if motdLabel then
+		motdLabel:SetText("Guild Message Of The Day:")
+	end
+
+	local motdText = getglobal("MainGuildFrameMotd")
+	if motdText then
 		local motd = roster.motd or ""
 		if motd ~= "" then
-			MainGuildFrameMotd:SetText("MOTD: " .. motd)
-			MainGuildFrameMotd:Show()
+			motdText:SetText(motd)
+			motdText:Show()
 		else
-			MainGuildFrameMotd:SetText("")
-			MainGuildFrameMotd:Hide()
+			motdText:SetText("")
+			motdText:Show()
 		end
 	end
 
-	if MainGuildFrameMemberCount then
-		MainGuildFrameMemberCount:SetText((roster.onlineCount or 0) .. " / " .. (roster.totalCount or 0) .. " online")
-	end
-
 	if MainGuildFrameTotalText then
+		local total = roster.totalCount or 0
+		local online = roster.onlineCount or 0
+		local memberWord = total == 1 and "Guild Member" or "Guild Members"
 		MainGuildFrameTotalText:SetText(
-			(roster.totalCount or 0) .. " Members, " ..
-			(roster.onlineCount or 0) .. " Online"
+			"|cFFFFFFFF" .. total .. "|r " .. memberWord .. " (|cFFFFFFFF" .. online .. "|r |cFF33FF33Online|r)"
 		)
 	end
 end
@@ -199,35 +208,61 @@ local function UpdateButtons()
 	local groupInvBtn = getglobal("MainGuildFrameGroupInviteButton")
 	local motdBtn = getglobal("MainGuildFrameSetMotdButton")
 
+	-- Show/hide officer buttons based on rank
 	if promoteBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > (playerRank + 1) then
-			promoteBtn:Enable()
+		if canManage then
+			promoteBtn:Show()
+			if hasSelection and not isSelf and selected.rank > (playerRank + 1) then
+				promoteBtn:Enable()
+			else
+				promoteBtn:Disable()
+			end
 		else
-			promoteBtn:Disable()
+			promoteBtn:Hide()
 		end
 	end
 
 	if demoteBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
-			demoteBtn:Enable()
+		if canManage then
+			demoteBtn:Show()
+			if hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
+				demoteBtn:Enable()
+			else
+				demoteBtn:Disable()
+			end
 		else
-			demoteBtn:Disable()
+			demoteBtn:Hide()
 		end
 	end
 
 	if removeBtn then
-		if canManage and hasSelection and not isSelf and selected.rank > playerRank then
-			removeBtn:Enable()
+		if canManage then
+			removeBtn:Show()
+			if hasSelection and not isSelf and selected.rank > playerRank then
+				removeBtn:Enable()
+			else
+				removeBtn:Disable()
+			end
 		else
-			removeBtn:Disable()
+			removeBtn:Hide()
 		end
 	end
 
 	if inviteBtn then
 		if canManage then
+			inviteBtn:Show()
 			inviteBtn:Enable()
 		else
-			inviteBtn:Disable()
+			inviteBtn:Hide()
+		end
+	end
+
+	if motdBtn then
+		if IsGuildMaster() then
+			motdBtn:Show()
+			motdBtn:Enable()
+		else
+			motdBtn:Hide()
 		end
 	end
 
@@ -244,14 +279,6 @@ local function UpdateButtons()
 			groupInvBtn:Enable()
 		else
 			groupInvBtn:Disable()
-		end
-	end
-
-	if motdBtn then
-		if IsGuildMaster() then
-			motdBtn:Enable()
-		else
-			motdBtn:Disable()
 		end
 	end
 end
@@ -271,7 +298,6 @@ local function UpdateRows()
 		local classText = getglobal(prefix .. "Class")
 		local rankText = getglobal(prefix .. "Rank")
 		local onlineText = getglobal(prefix .. "Online")
-		local highlight = getglobal(prefix .. "Highlight")
 
 		if member then
 			local cc = GetClassColor(member.classId)
@@ -396,13 +422,9 @@ function MainGuildFrameSortRank_OnClick()    SetSort("rank", true) end
 function MainGuildFrameSortOnline_OnClick()  SetSort("online", true) end
 
 function MainGuildFrameOnlineToggle_OnClick()
-	guildShowOnline = not guildShowOnline
+	guildShowOffline = not guildShowOffline
 	guildScrollOffset = 0
 	Refresh()
-end
-
-function MainGuildFrameRefreshButton_OnClick()
-	RequestRoster()
 end
 
 function MainGuildFrameWhisperButton_OnClick()
@@ -465,6 +487,14 @@ function MainGuildFrame_OnLoad()
 	if this.EnableMouseWheel then
 		this:EnableMouseWheel(1)
 	end
+
+	-- Set toggle label text
+	local toggleText = getglobal("MainGuildFrameOnlineToggleText")
+	if toggleText then
+		toggleText:SetText("Show Offline Members")
+	end
+
+
 	this:Hide()
 end
 
@@ -515,10 +545,10 @@ local function MainGuildFrame_HookFriendsFrame()
 	FriendsFrame_Update = function()
 		local guildPanel = getglobal("MainGuildFrame")
 		if FriendsFrame.selectedTab == 4 then
-			FriendsFrameTopLeft:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-TopLeft")
-			FriendsFrameTopRight:SetTexture("Interface\\ClassTrainerFrame\\UI-ClassTrainer-TopRight")
-			FriendsFrameBottomLeft:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotLeft")
-			FriendsFrameBottomRight:SetTexture("Interface\\FriendsFrame\\WhoFrame-BotRight")
+			FriendsFrameTopLeft:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-TopLeft")
+			FriendsFrameTopRight:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-TopRight")
+			FriendsFrameBottomLeft:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-BottomLeft")
+			FriendsFrameBottomRight:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-General-BottomRight")
 			if FriendsListFrame then FriendsListFrame:Hide() end
 			if IgnoreListFrame then IgnoreListFrame:Hide() end
 			if WhoFrame then WhoFrame:Hide() end

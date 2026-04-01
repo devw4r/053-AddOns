@@ -860,33 +860,8 @@ function Main.RefreshManager()
 	end
 
 	if MainSessionOnlyText then
-		if Main.Config.backend == "server" then
-			MainSessionOnlyText:SetText("")
-		elseif Main.API and Main.API.configUnsupported then
-			MainSessionOnlyText:SetText("Server addon settings API is unavailable. Using local defaults for this session.")
-		elseif not Main.Initialized then
-			MainSessionOnlyText:SetText("Waiting for character addon settings from the server.")
-		elseif Main.IsSessionOnlyConfig() then
-			MainSessionOnlyText:SetText("Using local defaults for this session while server settings are unavailable.")
-		else
-			MainSessionOnlyText:SetText("")
-		end
-	end
-
-	for i = 1, Main.GetModuleCount() do
-		module = Main.GetModuleByIndex(i)
-		if module and module.reloadRequired and Main.GetRuntimeModuleEnabled and Main.GetRuntimeModuleEnabled(module.id) ~= nil then
-			if Main.GetRuntimeModuleEnabled(module.id) ~= Main_GetManagerConfiguredModuleEnabled(module.id) then
-				if MainSessionOnlyText then
-					if MainManagerFrame and MainManagerFrame:IsVisible() and Main.ManagerDraftConfig then
-						MainSessionOnlyText:SetText("Changes are queued until you press Okay.")
-					else
-						MainSessionOnlyText:SetText("Some layout changes apply after restarting the client.")
-					end
-				end
-				break
-			end
-		end
+		MainSessionOnlyText:SetText("")
+		MainSessionOnlyText:Hide()
 	end
 
 	if MainManagerIntroText then
@@ -1030,6 +1005,7 @@ function Main.RefreshManager()
 
 		if optionFrame then
 			if optionModule and option then
+				local optionDisabled = option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule)
 				optionLabel = getglobal(optionFrame:GetName() .. "Label")
 				valueLabel = getglobal(optionFrame:GetName() .. "Value")
 				slider = getglobal(optionFrame:GetName() .. "Slider")
@@ -1037,6 +1013,11 @@ function Main.RefreshManager()
 
 				if optionLabel then
 					optionLabel:SetText(option.label or option.key or "Value")
+					if optionDisabled then
+						optionLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						optionLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 				Main_SetManagerNumberOptionDisplay(i, option, optionValue)
 				if slider then
@@ -1045,7 +1026,21 @@ function Main.RefreshManager()
 					slider:SetValueStep(Main_ToNumber(option.step, 1) or 1)
 					slider:SetValue(optionValue)
 					Main.ManagerSyncing = nil
+					if optionDisabled then
+						slider:EnableMouse(0)
+						slider:SetAlpha(0.4)
+					else
+						slider:EnableMouse(1)
+						slider:SetAlpha(1)
+					end
 					slider:Show()
+				end
+				if valueLabel then
+					if optionDisabled then
+						valueLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						valueLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 				optionFrame:Show()
 			else

@@ -20,6 +20,7 @@ source_files=(
   "ReloadButton.lua"
   "ChatCopy.lua"
   "ClientTweaks.lua"
+  "ClassPortraits.lua"
   "GuildFrame.lua"
   "Main_Slash.lua"
 )

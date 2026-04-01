@@ -7,6 +7,7 @@ local MainTalentButton = {
 			type = "toggle",
 			key = "actionbars_show_talent_button",
 			label = "Show talents button",
+			managerOrder = 10,
 			defaultValue = true,
 			requiresModule = false,
 		},

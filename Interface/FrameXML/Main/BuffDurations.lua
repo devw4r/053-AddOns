@@ -6,6 +6,7 @@ local MainBuffDurations = {
 			type = "toggle",
 			key = "buff_durations_blink_white",
 			label = "Invert warning color",
+			managerOrder = 6,
 			defaultValue = true,
 		},
 	},

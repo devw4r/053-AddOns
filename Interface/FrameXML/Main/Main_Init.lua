@@ -2,8 +2,8 @@
 Main = Main or {}
 Main.Title = "Main"
 Main.Version = "0.1.0"
-Main.ManagerSlotCount = 10
-Main.ManagerSlotMax = 13
+Main.ManagerSlotCount = 16
+Main.ManagerSlotMax = 16
 Main.ManagerOptionSlotCount = 12
 Main.ManagerNumberSlotCount = 3
 Main.LayoutMonitorInterval = 0.25
