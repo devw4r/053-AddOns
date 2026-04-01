@@ -7,7 +7,7 @@ local MainClientTweaks = {
 			type = "toggle",
 			key = "client_auto_loot",
 			label = "Auto-loot",
-			managerOrder = 8,
+			managerOrder = 11,
 			defaultValue = true,
 		},
 	},

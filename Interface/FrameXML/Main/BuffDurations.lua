@@ -5,7 +5,7 @@ local MainBuffDurations = {
 		{
 			type = "toggle",
 			key = "buff_durations_blink_white",
-			label = "Invert warning color",
+			label = "Show warning timers in white",
 			managerOrder = 6,
 			defaultValue = true,
 		},

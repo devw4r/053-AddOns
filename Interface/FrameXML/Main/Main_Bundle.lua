@@ -519,19 +519,27 @@ end
 
 local function Main_GetManagerOptionByTypeIndex(optionType, index)
 	local startIndex
+	local optionIndex
 	local entries
 	local entry
 
 	startIndex = 0
+	optionIndex = index
 
 	if optionType == "toggle" then
 		startIndex = ((Main.ManagerToggleOptionPage or 1) - 1) * Main.ManagerOptionSlotCount
+		-- Fill the first four rows in the left column before mirroring them on the right.
+		-- The lower two rows are only used once the upper grid is full.
+		if not Main.ManagerToggleSlotOrder then
+			Main.ManagerToggleSlotOrder = { 1, 2, 3, 4, 9, 5, 6, 7, 8, 10, 11, 12 }
+		end
+		optionIndex = Main.ManagerToggleSlotOrder[index] or index
 	elseif optionType == "number" then
 		startIndex = ((Main.ManagerNumberOptionPage or 1) - 1) * Main.ManagerNumberSlotCount
 	end
 
 	entries = Main_CollectManagerOptions(optionType)
-	entry = entries[startIndex + index]
+	entry = entries[startIndex + optionIndex]
 	if entry then
 		return entry.module, entry.option
 	end
@@ -1067,7 +1075,7 @@ local MainBuffDurations = {
 		{
 			type = "toggle",
 			key = "buff_durations_blink_white",
-			label = "Invert warning color",
+			label = "Show warning timers in white",
 			managerOrder = 6,
 			defaultValue = true,
 		},
@@ -2743,7 +2751,7 @@ local MainClockModule = {
 			type = "toggle",
 			key = "clock_twenty_four_hour",
 			label = "Use 24-hour time",
-			managerOrder = 8,
+			managerOrder = 12,
 			defaultValue = false,
 		},
 		{
@@ -3040,7 +3048,7 @@ local MainTalentButton = {
 			type = "toggle",
 			key = "actionbars_show_talent_button",
 			label = "Show talents button",
-			managerOrder = 9,
+			managerOrder = 10,
 			defaultValue = true,
 			requiresModule = false,
 		},

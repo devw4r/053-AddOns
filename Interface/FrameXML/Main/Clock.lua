@@ -6,7 +6,7 @@ local MainClockModule = {
 			type = "toggle",
 			key = "clock_twenty_four_hour",
 			label = "Use 24-hour time",
-			managerOrder = 9,
+			managerOrder = 12,
 			defaultValue = false,
 		},
 		{
