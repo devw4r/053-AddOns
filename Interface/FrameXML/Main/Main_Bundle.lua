@@ -3,6 +3,7 @@
 -- so module/source files are bundled here while staying split on disk for maintenance.
 
 -- BEGIN Main_UI.lua
+do
 local function Main_RegisterManagerPanel()
 	local index
 
@@ -1065,9 +1066,11 @@ function Main.RefreshManager()
 	Main_AdjustGameMenu()
 end
 
+end
 -- END Main_UI.lua
 
 -- BEGIN BuffDurations.lua
+do
 local MainBuffDurations = {
 	name = "Buff Durations",
 	description = "Shows time remaining on player buffs and debuffs.",
@@ -1210,9 +1213,11 @@ end
 
 Main.RegisterModule("buff_durations", MainBuffDurations)
 
+end
 -- END BuffDurations.lua
 
 -- BEGIN InstantQuestText.lua
+do
 local MainInstantQuestText = {
 	name = "Instant Quest Text",
 	description = "Removes quest text fades and displays quest text immediately.",
@@ -1251,9 +1256,11 @@ end
 
 Main.RegisterModule("instant_quest_text", MainInstantQuestText)
 
+end
 -- END InstantQuestText.lua
 
 -- BEGIN UnitFrames.lua
+do
 local MainUnitFrames = {
 	name = "Unit Frames",
 	description = "Repositions player and target frames, applies the alternative frame style, and controls portraits/status text.",
@@ -1913,9 +1920,11 @@ end
 
 Main.RegisterModule("unit_frames", MainUnitFrames)
 
+end
 -- END UnitFrames.lua
 
 -- BEGIN ActionBars.lua
+do
 local MainActionBars = {
 	name = "Action Bars",
 	description = "Applies the custom stock-bar layout and bag/microbutton tweaks.",
@@ -2740,9 +2749,11 @@ end
 
 Main.RegisterModule("action_bars", MainActionBars)
 
+end
 -- END ActionBars.lua
 
 -- BEGIN Clock.lua
+do
 local MainClockModule = {
 	name = "Clock",
 	description = "Shows a movable in-game clock window.",
@@ -2957,9 +2968,11 @@ end
 
 Main.RegisterModule("clock", MainClockModule)
 
+end
 -- END Clock.lua
 
 -- BEGIN OpenAllBags.lua
+do
 local MainOpenAllBags = {
 	name = "Open All Bags",
 	description = "Adds a button near the backpack to toggle all bags.",
@@ -3036,9 +3049,11 @@ end
 
 Main.RegisterModule("open_all_bags", MainOpenAllBags)
 
+end
 -- END OpenAllBags.lua
 
 -- BEGIN TalentButton.lua
+do
 local MainTalentButton = {
 	name = "Talents Button",
 	description = "Adds a talents micro button beside the main menu icons.",
@@ -3167,9 +3182,11 @@ end
 
 Main.RegisterModule("talent_button", MainTalentButton)
 
+end
 -- END TalentButton.lua
 
 -- BEGIN TargetAuras.lua
+do
 local MainTargetAuras = {
 	name = "Target Auras",
 	description = "Shows tracked target aura icons from the shared addon API.",
@@ -3564,9 +3581,11 @@ end
 
 Main.RegisterModule("target_auras", MainTargetAuras)
 
+end
 -- END TargetAuras.lua
 
 -- BEGIN TargetDistance.lua
+do
 local MainTargetDistance = {
 	name = "Target Distance",
 	description = "Shows distance to your current target with local map math and server fallback.",
@@ -3806,9 +3825,11 @@ end
 
 Main.RegisterModule("target_distance", MainTargetDistance)
 
+end
 -- END TargetDistance.lua
 
 -- BEGIN TutorialExtend.lua
+do
 local MainTutorialExtend = {
 	name = "Tutorial Extend",
 	description = "Shows the stock tutorial prompts again for brand new characters.",
@@ -3912,9 +3933,11 @@ end
 
 Main.RegisterModule("tutorial_extend", MainTutorialExtend)
 
+end
 -- END TutorialExtend.lua
 
 -- BEGIN ExtendedStats.lua
+do
 local MainExtendedStats = {
 	name = "Extended Stats",
 	description = "Shows an expanded stats panel beside the character sheet.",
@@ -4657,9 +4680,11 @@ end
 
 Main.RegisterModule("extended_stats", MainExtendedStats)
 
+end
 -- END ExtendedStats.lua
 
 -- BEGIN ReloadButton.lua
+do
 local MainReloadButton = {
 	name = "Reload Button",
 	description = "Adds a Reload UI button to the escape menu.",
@@ -4702,9 +4727,11 @@ end
 
 Main.RegisterModule("reload_button", MainReloadButton)
 
+end
 -- END ReloadButton.lua
 
 -- BEGIN ChatCopy.lua
+do
 local MainChatCopy = {
 	name = "Chat Copy",
 	description = "Adds a chat log copy window and button for the default chat frame.",
@@ -4818,9 +4845,11 @@ end
 
 Main.RegisterModule("chat_copy", MainChatCopy)
 
+end
 -- END ChatCopy.lua
 
 -- BEGIN ClientTweaks.lua
+do
 local MainClientTweaks = {
 	name = "Client Settings",
 	description = "Applies small client-side behavior toggles.",
@@ -4861,9 +4890,11 @@ end
 
 Main.RegisterModule("client_tweaks", MainClientTweaks)
 
+end
 -- END ClientTweaks.lua
 
 -- BEGIN ClassPortraits.lua
+do
 local MainClassPortraits = {
 	name = "Class Portraits",
 	description = "Replaces player and target 3D portraits with class icon circles.",
@@ -4961,10 +4992,12 @@ end
 
 Main.RegisterModule("class_portraits", MainClassPortraits)
 
+end
 -- END ClassPortraits.lua
 
 -- BEGIN GuildFrame.lua
-;(function()
+do
+(function()
 
 local MainGuildFrame = {
 	name = "Guild Frame",
@@ -5577,9 +5610,11 @@ Main.RegisterModule("guild_frame", MainGuildFrame)
 
 end)()
 
+end
 -- END GuildFrame.lua
 
 -- BEGIN Main_Slash.lua
+do
 SlashCmdList.MAINADDONS = function()
 	Main_ToggleUIPanel(MainManagerFrame)
 end
@@ -5596,5 +5631,6 @@ end
 SLASH_MAINGUILDROSTER1 = "/groster"
 SLASH_MAINGUILDROSTER2 = "/guildroster"
 
+end
 -- END Main_Slash.lua
 

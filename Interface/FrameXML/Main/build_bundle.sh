@@ -33,8 +33,10 @@ source_files=(
 
   for source_file in "${source_files[@]}"; do
     printf '%s\n' "-- BEGIN ${source_file}"
+    printf '%s\n' "do"
     cat "$main_dir/$source_file"
-    printf '\n%s\n' "-- END ${source_file}"
+    printf '\n%s\n' "end"
+    printf '%s\n' "-- END ${source_file}"
     printf '\n'
   done
 } > "$bundle_path"

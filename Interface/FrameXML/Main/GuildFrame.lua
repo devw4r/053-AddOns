@@ -1,4 +1,4 @@
-;(function()
+(function()
 
 local MainGuildFrame = {
 	name = "Guild Frame",
