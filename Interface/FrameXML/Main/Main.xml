@@ -446,7 +446,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-82"/>
+							<AbsDimension x="18" y="-79"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -460,7 +460,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-104"/>
+							<AbsDimension x="18" y="-98"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -474,7 +474,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-126"/>
+							<AbsDimension x="18" y="-117"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -488,7 +488,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-148"/>
+							<AbsDimension x="18" y="-136"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -516,10 +516,10 @@
 					<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="258" y="-82"/>
+							<AbsDimension x="258" y="-79"/>
 						</Offset>
 					</Anchor>
-					</Anchors>
+				</Anchors>
 					<Scripts>
 						<OnClick>
 							MainModuleToggle_OnClick()
@@ -530,7 +530,7 @@
 						<Anchors>
 							<Anchor point="TOPLEFT">
 								<Offset>
-									<AbsDimension x="258" y="-104"/>
+									<AbsDimension x="258" y="-98"/>
 								</Offset>
 							</Anchor>
 						</Anchors>
@@ -544,7 +544,7 @@
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset>
-								<AbsDimension x="258" y="-126"/>
+								<AbsDimension x="258" y="-117"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -558,7 +558,7 @@
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset>
-								<AbsDimension x="258" y="-148"/>
+								<AbsDimension x="258" y="-136"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -572,7 +572,7 @@
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset>
-								<AbsDimension x="258" y="-170"/>
+								<AbsDimension x="258" y="-155"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -586,7 +586,7 @@
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset>
-								<AbsDimension x="258" y="-192"/>
+								<AbsDimension x="258" y="-174"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -600,7 +600,7 @@
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset>
-								<AbsDimension x="258" y="-214"/>
+								<AbsDimension x="258" y="-193"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -614,7 +614,7 @@
 					<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-170"/>
+							<AbsDimension x="18" y="-155"/>
 						</Offset>
 					</Anchor>
 					</Anchors>
@@ -628,7 +628,7 @@
 					<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-192"/>
+							<AbsDimension x="18" y="-174"/>
 						</Offset>
 					</Anchor>
 					</Anchors>
@@ -642,7 +642,21 @@
 					<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="18" y="-214"/>
+							<AbsDimension x="18" y="-193"/>
+						</Offset>
+					</Anchor>
+					</Anchors>
+					<Scripts>
+						<OnClick>
+							MainModuleToggle_OnClick()
+						</OnClick>
+					</Scripts>
+				</CheckButton>
+				<CheckButton name="MainModuleToggle17" inherits="OptionsCheckButtonTemplate" id="17">
+					<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="18" y="-212"/>
 						</Offset>
 					</Anchor>
 					</Anchors>
@@ -1087,6 +1101,65 @@
 					</Layers>
 					<Frames>
 						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="3">
+							<Size>
+								<AbsDimension x="186" y="17"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT">
+									<Offset>
+										<AbsDimension x="18" y="6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Scripts>
+								<OnValueChanged>
+									MainManagerNumberSlider_OnValueChanged(arg1)
+								</OnValueChanged>
+							</Scripts>
+						</Slider>
+					</Frames>
+				</Frame>
+				<Frame name="MainManagerNumberOption4" id="4" hidden="true">
+					<Size>
+						<AbsDimension x="224" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+									<AbsDimension x="266" y="-444"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="ARTWORK">
+							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="156" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
+								<Size>
+									<AbsDimension x="56" y="12"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPRIGHT">
+										<Offset>
+											<AbsDimension x="-4" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+						</Layer>
+					</Layers>
+					<Frames>
+						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="4">
 							<Size>
 								<AbsDimension x="186" y="17"/>
 							</Size>

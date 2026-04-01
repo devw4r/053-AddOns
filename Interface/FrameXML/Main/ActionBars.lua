@@ -2,6 +2,19 @@ local MainActionBars = {
 	name = "Action Bars",
 	description = "Applies the custom stock-bar layout and bag/microbutton tweaks.",
 	reloadRequired = 1,
+	options = {
+		{
+			type = "number",
+			key = "actionbars_x_offset",
+			label = "Action Bar Horizontal Offset",
+			managerOrder = 4,
+			requiresModule = "action_bars",
+			defaultValue = 0,
+			step = 10,
+			minValue = -300,
+			maxValue = 300,
+		},
+	},
 }
 
 local mainActionBarsOriginalUpdateMicroButtons = nil
@@ -31,6 +44,10 @@ end
 
 local function MainActionBars_ShouldHideGryphons()
 	return Main.GetBoolSetting("actionbars_hide_gryphons", true)
+end
+
+local function MainActionBars_GetHorizontalOffset()
+	return Main.GetNumberSetting("actionbars_x_offset", 0)
 end
 
 local function MainActionBars_CaptureWidgetState(key, widget)
@@ -496,12 +513,17 @@ end
 
 local function MainActionBars_ApplyAlternativeLayout()
 	local index
+	local horizontalOffset
 
 	for index = 0, 3 do
 		getglobal("MainMenuBarTexture" .. index):Hide()
 	end
 
+	horizontalOffset = MainActionBars_GetHorizontalOffset()
+
 	MainActionBarArt:Show()
+	MainActionBarArt:ClearAllPoints()
+	MainActionBarArt:SetPoint("BOTTOM", "UIParent", "BOTTOM", horizontalOffset, -2)
 	MainXPBarBackground:Show()
 	MainMenuBar:EnableMouse(0)
 
@@ -538,11 +560,11 @@ local function MainActionBars_ApplyAlternativeLayout()
 	MainMenuExpBar:SetWidth(542)
 	MainMenuExpBar:SetHeight(10)
 	MainMenuExpBar:ClearAllPoints()
-	MainMenuExpBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, 0)
+	MainMenuExpBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", horizontalOffset, 0)
 	MainMenuExpBar:SetFrameLevel(0)
 
 	MainMenuBar:ClearAllPoints()
-	MainMenuBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", 237, 11)
+	MainMenuBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", 237 + horizontalOffset, 11)
 
 	MainXPBarBackground:SetWidth(542)
 	MainXPBarBackground:SetHeight(10)

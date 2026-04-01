@@ -1,7 +1,6 @@
 local MainMergedBags = {
-	name = "Merged Bags",
+	name = "Bagnon",
 	description = "Replaces the stock inventory bags with one merged frame.",
-	managerHidden = 1,
 }
 
 local MAIN_MERGED_BAGS_ID = "merged_bags"

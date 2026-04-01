@@ -67,6 +67,7 @@ Main.Config = {
 		client_auto_loot = true,
 	},
 	numericSettingAliases = {
+		actionbars_x_offset = "ax",
 		clock_offset_hours = "co",
 		clock_x = "cx",
 		clock_y = "cy",
@@ -76,6 +77,7 @@ Main.Config = {
 		unitframes_y_offset = "uy",
 	},
 	numericSettingDefaults = {
+		actionbars_x_offset = 0,
 		clock_offset_hours = 0,
 		clock_x = nil,
 		clock_y = nil,
@@ -85,6 +87,7 @@ Main.Config = {
 		unitframes_y_offset = 320,
 	},
 	numericSettingOrder = {
+		"actionbars_x_offset",
 		"clock_offset_hours",
 		"clock_x",
 		"clock_y",

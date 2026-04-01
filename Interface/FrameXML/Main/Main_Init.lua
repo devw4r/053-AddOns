@@ -2,11 +2,11 @@
 Main = Main or {}
 Main.Title = "Main"
 Main.Version = "0.1.0"
-Main.ManagerSlotCount = 16
-Main.ManagerSlotMax = 16
+Main.ManagerSlotCount = 17
+Main.ManagerSlotMax = 17
 Main.ManagerOptionSlotCount = 12
-Main.ManagerNumberSlotCount = 3
-Main.ManagerModuleSlotOrder = { 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 6, 15, 16 }
+Main.ManagerNumberSlotCount = 4
+Main.ManagerModuleSlotOrder = { 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 6, 7, 16, 17 }
 Main.LayoutMonitorInterval = 0.25
 Main.Modules = Main.Modules or {}
 Main.ModuleOrder = Main.ModuleOrder or {}
