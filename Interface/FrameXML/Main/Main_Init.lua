@@ -6,6 +6,7 @@ Main.ManagerSlotCount = 16
 Main.ManagerSlotMax = 16
 Main.ManagerOptionSlotCount = 12
 Main.ManagerNumberSlotCount = 3
+Main.ManagerModuleSlotOrder = { 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 6, 15, 16 }
 Main.LayoutMonitorInterval = 0.25
 Main.Modules = Main.Modules or {}
 Main.ModuleOrder = Main.ModuleOrder or {}

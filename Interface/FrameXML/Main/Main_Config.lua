@@ -17,6 +17,7 @@ Main.Config = {
 		action_bars = 13,
 		class_portraits = 14,
 		guild_frame = 15,
+		always_track = 16,
 	},
 	defaults = {
 		modules = {
@@ -36,6 +37,7 @@ Main.Config = {
 			action_bars = true,
 			class_portraits = true,
 			guild_frame = true,
+			always_track = false,
 		},
 		settings = {
 		},

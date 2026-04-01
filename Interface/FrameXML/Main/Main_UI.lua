@@ -317,9 +317,11 @@ end
 
 local function Main_GetManagerModuleByIndex(index)
 	local pageIndex
+	local slotIndex
 
 	pageIndex = ((Main.ManagerModulePage or 1) - 1) * Main.ManagerSlotCount
-	return Main.GetVisibleModuleByIndex(pageIndex + index)
+	slotIndex = Main.ManagerModuleSlotOrder and Main.ManagerModuleSlotOrder[index] or index
+	return Main.GetVisibleModuleByIndex(pageIndex + slotIndex)
 end
 
 local function Main_GetManagerModulePageCount()
@@ -595,6 +597,43 @@ local function Main_FormatManagerNumberValue(option, value)
 	return Main_ToString(value)
 end
 
+local function Main_IsManagerModuleAvailable(module)
+	if not module then
+		return nil
+	end
+
+	if module.IsAvailable then
+		return module:IsAvailable() and true or false
+	end
+
+	return true
+end
+
+local function Main_IsManagerOptionDisabled(module, option)
+	if option and option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule) then
+		return 1
+	end
+
+	if option and option.disabledFunc and option.disabledFunc(module, option) then
+		return 1
+	end
+
+	return nil
+end
+
+local function Main_RunWithThis(frame, callback)
+	local previousThis
+
+	if not frame or not callback then
+		return
+	end
+
+	previousThis = this
+	this = frame
+	callback()
+	this = previousThis
+end
+
 function MainModuleToggle_OnClick()
 	local module
 	local enabled
@@ -785,7 +824,7 @@ function Main.RefreshManager()
 	local modulePageCount
 	local slider
 	local optionValue
-	local activeModuleSlotCount
+	local moduleAvailable
 
 	modulePageCount = Main_GetManagerModulePageCount()
 	if (Main.ManagerModulePage or 1) > modulePageCount then
@@ -809,6 +848,7 @@ function Main.RefreshManager()
 
 		if toggle then
 			if module then
+				moduleAvailable = Main_IsManagerModuleAvailable(module)
 				label = getglobal(toggle:GetName() .. "Text")
 				if label then
 					label:SetText(module.name)
@@ -818,12 +858,22 @@ function Main.RefreshManager()
 					if label.SetJustifyH then
 						label:SetJustifyH("LEFT")
 					end
+					if moduleAvailable then
+						label:SetTextColor(1, 0.82, 0)
+					else
+						label:SetTextColor(0.5, 0.5, 0.5)
+					end
 				end
 
 				if Main_GetManagerConfiguredModuleEnabled(module.id) then
 					toggle:SetChecked(1)
 				else
 					toggle:SetChecked(0)
+				end
+				if moduleAvailable then
+					toggle:Enable()
+				else
+					toggle:Disable()
 				end
 				toggle:Show()
 			else
@@ -983,6 +1033,7 @@ function Main.RefreshManager()
 
 		if optionToggle then
 			if optionModule and option then
+				local optionDisabled = Main_IsManagerOptionDisabled(optionModule, option)
 				optionLabel = getglobal(optionToggle:GetName() .. "Text")
 				if optionLabel then
 					optionLabel:SetText(option.label or option.key or "Option")
@@ -992,6 +1043,11 @@ function Main.RefreshManager()
 					if optionLabel.SetJustifyH then
 						optionLabel:SetJustifyH("LEFT")
 					end
+					if optionDisabled then
+						optionLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						optionLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 
 				if Main_GetManagerBoolSetting(option.key, option.defaultValue) then
@@ -999,7 +1055,11 @@ function Main.RefreshManager()
 				else
 					optionToggle:SetChecked(0)
 				end
-				optionToggle:Enable()
+				if optionDisabled then
+					optionToggle:Disable()
+				else
+					optionToggle:Enable()
+				end
 				optionToggle:Show()
 			else
 				optionToggle:Hide()
@@ -1013,7 +1073,7 @@ function Main.RefreshManager()
 
 		if optionFrame then
 			if optionModule and option then
-				local optionDisabled = option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule)
+				local optionDisabled = Main_IsManagerOptionDisabled(optionModule, option)
 				optionLabel = getglobal(optionFrame:GetName() .. "Label")
 				valueLabel = getglobal(optionFrame:GetName() .. "Value")
 				slider = getglobal(optionFrame:GetName() .. "Slider")

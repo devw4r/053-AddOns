@@ -375,6 +375,8 @@ function Main.API:HandleTargetDistanceMessage(message)
 end
 
 function Main.API:HandleAuraMessage(message)
+	local countValue
+	local pendingState
 	local unitId
 	local name
 	local harmfulText
@@ -388,7 +390,26 @@ function Main.API:HandleAuraMessage(message)
 	local now
 	local entry
 
-	if string.find(message, "^%d+$") then
+	countValue = tonumber(message)
+	if countValue ~= nil then
+		pendingState = nil
+
+		Main_ForEach(self.unitAuras.states, function(unitId, state)
+			if not pendingState and state and state.requestPending and state.requestToken then
+				pendingState = state
+			elseif pendingState and state and state.requestPending and state.requestToken then
+				pendingState = nil
+			end
+		end)
+
+		if pendingState and countValue <= 0 then
+			pendingState.entries = {}
+			pendingState.activeToken = pendingState.requestToken
+			pendingState.requestPending = nil
+			pendingState.requestToken = nil
+			pendingState.unavailable = nil
+		end
+
 		return 1
 	end
 

@@ -23,9 +23,19 @@ local MainTargetAuras = {
 }
 
 local MAIN_TARGET_AURAS_UPDATE_RATE = 0.2
-local MAIN_TARGET_AURAS_REFRESH_RATE = 1
+local MAIN_TARGET_AURAS_ACTIVE_REFRESH_RATE = 3
+local MAIN_TARGET_AURAS_IDLE_REFRESH_RATE = 8
 local MAIN_TARGET_AURAS_MAX_BUTTONS = 16
 local MAIN_TARGET_AURAS_DEFAULT_ICON = "Interface\\Icons\\Temp"
+
+local mainTargetAurasUnitGainsBuff = AURAADDEDOTHERHELPFUL and Main_StringGSub(format(AURAADDEDOTHERHELPFUL, "", ""), "%.", "") or nil
+local mainTargetAurasUnitGainsDebuff = AURAADDEDOTHERHARMFUL and Main_StringGSub(format(AURAADDEDOTHERHARMFUL, "", ""), "%.", "") or nil
+local mainTargetAurasUnitLosesAura = AURAREMOVEDOTHER and Main_StringGSub(format(AURAREMOVEDOTHER, "", ""), "%.", "") or nil
+local mainTargetAurasUnitChangesAura = AURACHANGEDOTHER and Main_StringGSub(format(AURACHANGEDOTHER, "", "", ""), "%.", "") or nil
+local mainTargetAurasPlayerGainsBuff = AURAADDEDSELFHELPFUL and Main_StringGSub(format(AURAADDEDSELFHELPFUL, ""), "%.", "") or nil
+local mainTargetAurasPlayerGainsDebuff = AURAADDEDSELFHARMFUL and Main_StringGSub(format(AURAADDEDSELFHARMFUL, ""), "%.", "") or nil
+local mainTargetAurasPlayerLosesAura = AURAREMOVEDSELF and Main_StringGSub(format(AURAREMOVEDSELF, ""), "%.", "") or nil
+local mainTargetAurasPlayerChangesAura = AURACHANGEDSELF and Main_StringGSub(format(AURACHANGEDSELF, "", ""), "%.", "") or nil
 
 local function MainTargetAuras_GetRemainingSeconds(aura)
 	local remaining
@@ -121,6 +131,21 @@ end
 
 local function MainTargetAuras_ShouldShow()
 	return Main.IsModuleEnabled("target_auras") and Main.GetBoolSetting("unitframes_show_target_auras", true)
+end
+
+local function MainTargetAuras_GetRefreshRate()
+	local entries
+
+	if not MainTargetAuras_ShouldShow() then
+		return nil
+	end
+
+	entries = Main.API and Main.API.GetUnitAuras and Main.API:GetUnitAuras("target") or nil
+	if entries and Main_ArrayCount(entries) > 0 then
+		return MAIN_TARGET_AURAS_ACTIVE_REFRESH_RATE
+	end
+
+	return MAIN_TARGET_AURAS_IDLE_REFRESH_RATE
 end
 
 local function MainTargetAuras_FormatCountText(remainingSeconds)
@@ -294,11 +319,92 @@ local function MainTargetAuras_UpdateDisplay()
 end
 
 local function MainTargetAuras_RequestSnapshot(force)
-	if not Main.API or not Main.API.RequestUnitAuras or not UnitExists("target") then
+	if not MainTargetAuras_ShouldShow() or not Main.API or not Main.API.RequestUnitAuras or not UnitExists or not UnitExists("target") then
 		return
 	end
 
 	Main.API:RequestUnitAuras("target", force)
+end
+
+local function MainTargetAuras_ExtractTargetName(message, marker, capturePattern, targetCaptureIndex)
+	local payload
+	local firstValue
+	local secondValue
+	local thirdValue
+
+	if not marker or not message or not Main_StringFind(message, marker) then
+		return nil
+	end
+
+	payload = Main_StringGSub(message, marker, "`")
+	payload = Main_StringGSub(payload, "%.$", "")
+	_, _, firstValue, secondValue, thirdValue = Main_StringFind(payload, capturePattern)
+
+	if targetCaptureIndex == 1 then
+		return firstValue
+	end
+	if targetCaptureIndex == 2 then
+		return secondValue
+	end
+
+	return thirdValue
+end
+
+local function MainTargetAuras_CombatMessageAffectsCurrentTarget(message)
+	local currentTarget
+	local targetName
+
+	if not message or not UnitExists or not UnitExists("target") then
+		return nil
+	end
+
+	currentTarget = UnitName and UnitName("target") or nil
+	if not currentTarget or currentTarget == "" then
+		return nil
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitGainsBuff, "^(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitGainsDebuff, "^(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitLosesAura, "^(.-)`(.-)$", 2)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitChangesAura, "^(.-)`(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	return nil
+end
+
+local function MainTargetAuras_CombatMessageAffectsPlayer(message)
+	if not message then
+		return nil
+	end
+
+	if mainTargetAurasPlayerGainsBuff and Main_StringFind(message, mainTargetAurasPlayerGainsBuff) then
+		return 1
+	end
+	if mainTargetAurasPlayerGainsDebuff and Main_StringFind(message, mainTargetAurasPlayerGainsDebuff) then
+		return 1
+	end
+	if mainTargetAurasPlayerLosesAura and Main_StringFind(message, mainTargetAurasPlayerLosesAura) then
+		return 1
+	end
+	if mainTargetAurasPlayerChangesAura and Main_StringFind(message, mainTargetAurasPlayerChangesAura) then
+		return 1
+	end
+
+	return nil
 end
 
 function MainTargetAurasFrame_OnLoad()
@@ -306,6 +412,9 @@ function MainTargetAurasFrame_OnLoad()
 	this.refreshElapsed = 0
 	this:RegisterEvent("PLAYER_ENTERING_WORLD")
 	this:RegisterEvent("PLAYER_TARGET_CHANGED")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_ENEMY")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_SELF")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_PARTY")
 	this:Hide()
 end
 
@@ -315,13 +424,38 @@ function MainTargetAurasFrame_OnEvent(event)
 			Main.API:ResetUnitAuras("target")
 		end
 		this.displayElapsed = MAIN_TARGET_AURAS_UPDATE_RATE
-		this.refreshElapsed = MAIN_TARGET_AURAS_REFRESH_RATE
+		this.refreshElapsed = 0
 		MainTargetAuras_RequestSnapshot(1)
 		MainTargetAuras_UpdateDisplay()
+		return
+	end
+
+	if not MainTargetAuras_ShouldShow() then
+		return
+	end
+
+	if (event == "CHAT_MSG_COMBAT_LOG_ENEMY" or event == "CHAT_MSG_COMBAT_LOG_PARTY")
+		and MainTargetAuras_CombatMessageAffectsCurrentTarget(arg1) then
+		this.refreshElapsed = 0
+		MainTargetAuras_RequestSnapshot(1)
+		return
+	end
+
+	if event == "CHAT_MSG_COMBAT_LOG_SELF" and UnitIsUnit and UnitIsUnit("target", "player")
+		and MainTargetAuras_CombatMessageAffectsPlayer(arg1) then
+		this.refreshElapsed = 0
+		MainTargetAuras_RequestSnapshot(1)
 	end
 end
 
 function MainTargetAurasFrame_OnUpdate(elapsed)
+	local refreshRate
+
+	if not MainTargetAuras_ShouldShow() then
+		MainTargetAurasFrame:Hide()
+		return
+	end
+
 	if not UnitExists or not UnitExists("target") then
 		MainTargetAurasFrame:Hide()
 		return
@@ -330,7 +464,8 @@ function MainTargetAurasFrame_OnUpdate(elapsed)
 	this.displayElapsed = this.displayElapsed + elapsed
 	this.refreshElapsed = this.refreshElapsed + elapsed
 
-	if this.refreshElapsed >= MAIN_TARGET_AURAS_REFRESH_RATE then
+	refreshRate = MainTargetAuras_GetRefreshRate()
+	if refreshRate and this.refreshElapsed >= refreshRate then
 		this.refreshElapsed = 0
 		MainTargetAuras_RequestSnapshot(nil)
 	end
@@ -369,11 +504,20 @@ function MainTargetAuras:Enable()
 	if Main.API and Main.API.ResetUnitAuras then
 		Main.API:ResetUnitAuras("target")
 	end
+	if MainTargetAurasFrame then
+		MainTargetAurasFrame.refreshElapsed = 0
+	end
 	MainTargetAuras_RequestSnapshot(1)
 	MainTargetAuras_UpdateDisplay()
 end
 
 function MainTargetAuras:ApplyConfig()
+	if MainTargetAuras_ShouldShow() then
+		if MainTargetAurasFrame then
+			MainTargetAurasFrame.refreshElapsed = 0
+		end
+		MainTargetAuras_RequestSnapshot(1)
+	end
 	MainTargetAuras_UpdateDisplay()
 end
 

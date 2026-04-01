@@ -323,9 +323,11 @@ end
 
 local function Main_GetManagerModuleByIndex(index)
 	local pageIndex
+	local slotIndex
 
 	pageIndex = ((Main.ManagerModulePage or 1) - 1) * Main.ManagerSlotCount
-	return Main.GetVisibleModuleByIndex(pageIndex + index)
+	slotIndex = Main.ManagerModuleSlotOrder and Main.ManagerModuleSlotOrder[index] or index
+	return Main.GetVisibleModuleByIndex(pageIndex + slotIndex)
 end
 
 local function Main_GetManagerModulePageCount()
@@ -601,6 +603,43 @@ local function Main_FormatManagerNumberValue(option, value)
 	return Main_ToString(value)
 end
 
+local function Main_IsManagerModuleAvailable(module)
+	if not module then
+		return nil
+	end
+
+	if module.IsAvailable then
+		return module:IsAvailable() and true or false
+	end
+
+	return true
+end
+
+local function Main_IsManagerOptionDisabled(module, option)
+	if option and option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule) then
+		return 1
+	end
+
+	if option and option.disabledFunc and option.disabledFunc(module, option) then
+		return 1
+	end
+
+	return nil
+end
+
+local function Main_RunWithThis(frame, callback)
+	local previousThis
+
+	if not frame or not callback then
+		return
+	end
+
+	previousThis = this
+	this = frame
+	callback()
+	this = previousThis
+end
+
 function MainModuleToggle_OnClick()
 	local module
 	local enabled
@@ -791,7 +830,7 @@ function Main.RefreshManager()
 	local modulePageCount
 	local slider
 	local optionValue
-	local activeModuleSlotCount
+	local moduleAvailable
 
 	modulePageCount = Main_GetManagerModulePageCount()
 	if (Main.ManagerModulePage or 1) > modulePageCount then
@@ -815,6 +854,7 @@ function Main.RefreshManager()
 
 		if toggle then
 			if module then
+				moduleAvailable = Main_IsManagerModuleAvailable(module)
 				label = getglobal(toggle:GetName() .. "Text")
 				if label then
 					label:SetText(module.name)
@@ -824,12 +864,22 @@ function Main.RefreshManager()
 					if label.SetJustifyH then
 						label:SetJustifyH("LEFT")
 					end
+					if moduleAvailable then
+						label:SetTextColor(1, 0.82, 0)
+					else
+						label:SetTextColor(0.5, 0.5, 0.5)
+					end
 				end
 
 				if Main_GetManagerConfiguredModuleEnabled(module.id) then
 					toggle:SetChecked(1)
 				else
 					toggle:SetChecked(0)
+				end
+				if moduleAvailable then
+					toggle:Enable()
+				else
+					toggle:Disable()
 				end
 				toggle:Show()
 			else
@@ -989,6 +1039,7 @@ function Main.RefreshManager()
 
 		if optionToggle then
 			if optionModule and option then
+				local optionDisabled = Main_IsManagerOptionDisabled(optionModule, option)
 				optionLabel = getglobal(optionToggle:GetName() .. "Text")
 				if optionLabel then
 					optionLabel:SetText(option.label or option.key or "Option")
@@ -998,6 +1049,11 @@ function Main.RefreshManager()
 					if optionLabel.SetJustifyH then
 						optionLabel:SetJustifyH("LEFT")
 					end
+					if optionDisabled then
+						optionLabel:SetTextColor(0.5, 0.5, 0.5)
+					else
+						optionLabel:SetTextColor(1, 0.82, 0)
+					end
 				end
 
 				if Main_GetManagerBoolSetting(option.key, option.defaultValue) then
@@ -1005,7 +1061,11 @@ function Main.RefreshManager()
 				else
 					optionToggle:SetChecked(0)
 				end
-				optionToggle:Enable()
+				if optionDisabled then
+					optionToggle:Disable()
+				else
+					optionToggle:Enable()
+				end
 				optionToggle:Show()
 			else
 				optionToggle:Hide()
@@ -1019,7 +1079,7 @@ function Main.RefreshManager()
 
 		if optionFrame then
 			if optionModule and option then
-				local optionDisabled = option.requiresModule and not Main_GetManagerConfiguredModuleEnabled(option.requiresModule)
+				local optionDisabled = Main_IsManagerOptionDisabled(optionModule, option)
 				optionLabel = getglobal(optionFrame:GetName() .. "Label")
 				valueLabel = getglobal(optionFrame:GetName() .. "Value")
 				slider = getglobal(optionFrame:GetName() .. "Slider")
@@ -2971,6 +3031,282 @@ Main.RegisterModule("clock", MainClockModule)
 end
 -- END Clock.lua
 
+-- BEGIN AlwaysTrack.lua
+do
+local MainAlwaysTrack = {
+	name = "Always Track",
+	description = "Keeps your learned tracking spells active.",
+}
+
+local mainAlwaysTrackBookTypes = {
+	BOOKTYPE_ABILITY or "ability",
+	BOOKTYPE_SPELL or "spell",
+}
+
+local mainAlwaysTrackTrackedSpells = {
+	{ label = "Find Herbs", spellName = "Find Herbs", spellId = 2383 },
+	{ label = "Find Minerals", spellName = "Find Minerals", spellId = 2580 },
+	{ label = "Find Treasure", spellName = "Find Treasure", spellId = 2481 },
+}
+
+local mainAlwaysTrackKnownSpells = {}
+local mainAlwaysTrackHasKnownSpell = nil
+local mainAlwaysTrackRetryAt = nil
+local MAIN_ALWAYS_TRACK_RETRY_BUFFER_SECONDS = 0.2
+
+local function MainAlwaysTrack_FindSpellByName(spellName)
+	local bookIndex
+	local bookType
+	local slot
+	local slotName
+	local emptyCount
+	local maxSpells
+
+	if not spellName or not GetSpellName then
+		return nil, nil, nil
+	end
+
+	maxSpells = MAX_SPELLS or 1024
+	for bookIndex = 1, Main_ArrayCount(mainAlwaysTrackBookTypes) do
+		bookType = mainAlwaysTrackBookTypes[bookIndex]
+		emptyCount = 0
+		for slot = 1, maxSpells do
+			slotName = GetSpellName(slot, bookType)
+			if slotName and slotName ~= "" then
+				emptyCount = 0
+				if slotName == spellName then
+					return slot, bookType, GetSpellTexture and GetSpellTexture(slot, bookType) or nil
+				end
+			else
+				emptyCount = emptyCount + 1
+				if emptyCount >= 64 then
+					break
+				end
+			end
+		end
+	end
+
+	return nil, nil, nil
+end
+
+local function MainAlwaysTrack_RefreshKnownSpells()
+	local spellIndex
+	local spellInfo
+	local slot
+	local bookType
+	local texture
+	local hadKnownSpell
+	local hasKnownSpell
+
+	hadKnownSpell = mainAlwaysTrackHasKnownSpell and 1 or nil
+	mainAlwaysTrackKnownSpells = {}
+	hasKnownSpell = nil
+
+	for spellIndex = 1, Main_ArrayCount(mainAlwaysTrackTrackedSpells) do
+		spellInfo = mainAlwaysTrackTrackedSpells[spellIndex]
+		slot, bookType, texture = MainAlwaysTrack_FindSpellByName(spellInfo.spellName)
+		if slot and bookType then
+			Main_ArrayInsert(mainAlwaysTrackKnownSpells, {
+				label = spellInfo.label,
+				spellId = spellInfo.spellId,
+				slot = slot,
+				bookType = bookType,
+				texture = texture,
+			})
+			hasKnownSpell = 1
+		end
+	end
+
+	mainAlwaysTrackHasKnownSpell = hasKnownSpell
+
+	if hadKnownSpell ~= (mainAlwaysTrackHasKnownSpell and 1 or nil) and Main.ScheduleManagerRefresh then
+		Main.ScheduleManagerRefresh()
+	end
+end
+
+local function MainAlwaysTrack_GetActiveBuffTextures()
+	local buffIndex
+	local activeBuffIndex
+	local buffTexture
+	local activeTextures
+
+	activeTextures = {}
+	if not GetPlayerBuff or not GetPlayerBuffTexture then
+		return activeTextures
+	end
+
+	for buffIndex = 0, 15 do
+		activeBuffIndex = GetPlayerBuff(buffIndex, "HELPFUL")
+		if activeBuffIndex and activeBuffIndex >= 0 then
+			buffTexture = GetPlayerBuffTexture(activeBuffIndex)
+			if buffTexture then
+				activeTextures[buffTexture] = 1
+			end
+		end
+	end
+
+	return activeTextures
+end
+
+local function MainAlwaysTrack_GetMissingKnownSpells()
+	local activeBuffTextures
+	local missingSpells
+	local spellIndex
+	local knownSpell
+
+	activeBuffTextures = MainAlwaysTrack_GetActiveBuffTextures()
+	missingSpells = {}
+
+	for spellIndex = 1, Main_ArrayCount(mainAlwaysTrackKnownSpells) do
+		knownSpell = mainAlwaysTrackKnownSpells[spellIndex]
+		if knownSpell and knownSpell.slot and knownSpell.bookType then
+			if not knownSpell.texture or not activeBuffTextures[knownSpell.texture] then
+				Main_ArrayInsert(missingSpells, knownSpell)
+			end
+		end
+	end
+
+	return missingSpells
+end
+
+local function MainAlwaysTrack_ShouldMaintainTracking()
+	if not Main.IsModuleEnabled("always_track") then
+		mainAlwaysTrackRetryAt = nil
+		return nil
+	end
+
+	if not mainAlwaysTrackHasKnownSpell then
+		mainAlwaysTrackRetryAt = nil
+		return nil
+	end
+
+	return 1
+end
+
+local function MainAlwaysTrack_GetReadyAt(knownSpell)
+	local startTime
+	local duration
+	local enabled
+	local now
+
+	if not knownSpell or not knownSpell.slot or not knownSpell.bookType or not GetSpellCooldown then
+		return 0
+	end
+
+	startTime, duration, enabled = GetSpellCooldown(knownSpell.slot, knownSpell.bookType)
+	startTime = Main_ToNumber(startTime, 0) or 0
+	duration = Main_ToNumber(duration, 0) or 0
+	enabled = Main_ToNumber(enabled, 1)
+	now = GetTime and GetTime() or 0
+
+	if enabled == 0 then
+		return now + 86400
+	end
+
+	if duration <= 0 then
+		return 0
+	end
+
+	return startTime + duration + MAIN_ALWAYS_TRACK_RETRY_BUFFER_SECONDS
+end
+
+local function MainAlwaysTrack_EnsureTracking()
+	local now
+	local missingSpells
+	local spellIndex
+	local knownSpell
+	local readyAt
+	local nextReadyAt
+	local spellToCast
+
+	if not MainAlwaysTrack_ShouldMaintainTracking() then
+		return
+	end
+
+	missingSpells = MainAlwaysTrack_GetMissingKnownSpells()
+	if Main_ArrayCount(missingSpells) <= 0 then
+		mainAlwaysTrackRetryAt = nil
+		return
+	end
+
+	now = GetTime and GetTime() or 0
+
+	for spellIndex = 1, Main_ArrayCount(missingSpells) do
+		knownSpell = missingSpells[spellIndex]
+		readyAt = MainAlwaysTrack_GetReadyAt(knownSpell)
+		if not readyAt or readyAt <= now then
+			spellToCast = knownSpell
+			break
+		end
+		if not nextReadyAt or readyAt < nextReadyAt then
+			nextReadyAt = readyAt
+		end
+	end
+
+	if spellToCast then
+		mainAlwaysTrackRetryAt = now + MAIN_ALWAYS_TRACK_RETRY_BUFFER_SECONDS
+		CastSpell(spellToCast.slot, spellToCast.bookType)
+		return
+	end
+
+	mainAlwaysTrackRetryAt = nextReadyAt
+end
+
+local function MainAlwaysTrack_OnWorldOrAuraChanged()
+	MainAlwaysTrack_EnsureTracking()
+end
+
+local function MainAlwaysTrack_OnSpellsChanged()
+	MainAlwaysTrack_RefreshKnownSpells()
+	MainAlwaysTrack_EnsureTracking()
+end
+
+function MainAlwaysTrack:IsAvailable()
+	return mainAlwaysTrackHasKnownSpell and true or false
+end
+
+function MainAlwaysTrack:Init()
+	MainAlwaysTrack_RefreshKnownSpells()
+	Main.RegisterEventHandler("PLAYER_ENTERING_WORLD", "always_track_entering_world", MainAlwaysTrack_OnWorldOrAuraChanged)
+	Main.RegisterEventHandler("PLAYER_AURAS_CHANGED", "always_track_auras_changed", MainAlwaysTrack_OnWorldOrAuraChanged)
+	Main.RegisterEventHandler("SPELLS_CHANGED", "always_track_spells_changed", MainAlwaysTrack_OnSpellsChanged)
+end
+
+function MainAlwaysTrack:Enable()
+	MainAlwaysTrack_RefreshKnownSpells()
+	MainAlwaysTrack_EnsureTracking()
+end
+
+function MainAlwaysTrack:Disable()
+	mainAlwaysTrackRetryAt = nil
+end
+
+function MainAlwaysTrack:ApplyConfig()
+	MainAlwaysTrack_RefreshKnownSpells()
+	MainAlwaysTrack_EnsureTracking()
+end
+
+function MainAlwaysTrack:ProcessDeferredRefresh()
+	local now
+
+	if not mainAlwaysTrackRetryAt then
+		return
+	end
+
+	now = GetTime and GetTime() or 0
+	if now < mainAlwaysTrackRetryAt then
+		return
+	end
+
+	mainAlwaysTrackRetryAt = nil
+	MainAlwaysTrack_EnsureTracking()
+end
+
+Main.RegisterModule("always_track", MainAlwaysTrack)
+
+end
+-- END AlwaysTrack.lua
+
 -- BEGIN OpenAllBags.lua
 do
 local MainOpenAllBags = {
@@ -3212,9 +3548,19 @@ local MainTargetAuras = {
 }
 
 local MAIN_TARGET_AURAS_UPDATE_RATE = 0.2
-local MAIN_TARGET_AURAS_REFRESH_RATE = 1
+local MAIN_TARGET_AURAS_ACTIVE_REFRESH_RATE = 3
+local MAIN_TARGET_AURAS_IDLE_REFRESH_RATE = 8
 local MAIN_TARGET_AURAS_MAX_BUTTONS = 16
 local MAIN_TARGET_AURAS_DEFAULT_ICON = "Interface\\Icons\\Temp"
+
+local mainTargetAurasUnitGainsBuff = AURAADDEDOTHERHELPFUL and Main_StringGSub(format(AURAADDEDOTHERHELPFUL, "", ""), "%.", "") or nil
+local mainTargetAurasUnitGainsDebuff = AURAADDEDOTHERHARMFUL and Main_StringGSub(format(AURAADDEDOTHERHARMFUL, "", ""), "%.", "") or nil
+local mainTargetAurasUnitLosesAura = AURAREMOVEDOTHER and Main_StringGSub(format(AURAREMOVEDOTHER, "", ""), "%.", "") or nil
+local mainTargetAurasUnitChangesAura = AURACHANGEDOTHER and Main_StringGSub(format(AURACHANGEDOTHER, "", "", ""), "%.", "") or nil
+local mainTargetAurasPlayerGainsBuff = AURAADDEDSELFHELPFUL and Main_StringGSub(format(AURAADDEDSELFHELPFUL, ""), "%.", "") or nil
+local mainTargetAurasPlayerGainsDebuff = AURAADDEDSELFHARMFUL and Main_StringGSub(format(AURAADDEDSELFHARMFUL, ""), "%.", "") or nil
+local mainTargetAurasPlayerLosesAura = AURAREMOVEDSELF and Main_StringGSub(format(AURAREMOVEDSELF, ""), "%.", "") or nil
+local mainTargetAurasPlayerChangesAura = AURACHANGEDSELF and Main_StringGSub(format(AURACHANGEDSELF, "", ""), "%.", "") or nil
 
 local function MainTargetAuras_GetRemainingSeconds(aura)
 	local remaining
@@ -3310,6 +3656,21 @@ end
 
 local function MainTargetAuras_ShouldShow()
 	return Main.IsModuleEnabled("target_auras") and Main.GetBoolSetting("unitframes_show_target_auras", true)
+end
+
+local function MainTargetAuras_GetRefreshRate()
+	local entries
+
+	if not MainTargetAuras_ShouldShow() then
+		return nil
+	end
+
+	entries = Main.API and Main.API.GetUnitAuras and Main.API:GetUnitAuras("target") or nil
+	if entries and Main_ArrayCount(entries) > 0 then
+		return MAIN_TARGET_AURAS_ACTIVE_REFRESH_RATE
+	end
+
+	return MAIN_TARGET_AURAS_IDLE_REFRESH_RATE
 end
 
 local function MainTargetAuras_FormatCountText(remainingSeconds)
@@ -3483,11 +3844,92 @@ local function MainTargetAuras_UpdateDisplay()
 end
 
 local function MainTargetAuras_RequestSnapshot(force)
-	if not Main.API or not Main.API.RequestUnitAuras or not UnitExists("target") then
+	if not MainTargetAuras_ShouldShow() or not Main.API or not Main.API.RequestUnitAuras or not UnitExists or not UnitExists("target") then
 		return
 	end
 
 	Main.API:RequestUnitAuras("target", force)
+end
+
+local function MainTargetAuras_ExtractTargetName(message, marker, capturePattern, targetCaptureIndex)
+	local payload
+	local firstValue
+	local secondValue
+	local thirdValue
+
+	if not marker or not message or not Main_StringFind(message, marker) then
+		return nil
+	end
+
+	payload = Main_StringGSub(message, marker, "`")
+	payload = Main_StringGSub(payload, "%.$", "")
+	_, _, firstValue, secondValue, thirdValue = Main_StringFind(payload, capturePattern)
+
+	if targetCaptureIndex == 1 then
+		return firstValue
+	end
+	if targetCaptureIndex == 2 then
+		return secondValue
+	end
+
+	return thirdValue
+end
+
+local function MainTargetAuras_CombatMessageAffectsCurrentTarget(message)
+	local currentTarget
+	local targetName
+
+	if not message or not UnitExists or not UnitExists("target") then
+		return nil
+	end
+
+	currentTarget = UnitName and UnitName("target") or nil
+	if not currentTarget or currentTarget == "" then
+		return nil
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitGainsBuff, "^(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitGainsDebuff, "^(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitLosesAura, "^(.-)`(.-)$", 2)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	targetName = MainTargetAuras_ExtractTargetName(message, mainTargetAurasUnitChangesAura, "^(.-)`(.-)`(.-)$", 1)
+	if targetName == currentTarget then
+		return 1
+	end
+
+	return nil
+end
+
+local function MainTargetAuras_CombatMessageAffectsPlayer(message)
+	if not message then
+		return nil
+	end
+
+	if mainTargetAurasPlayerGainsBuff and Main_StringFind(message, mainTargetAurasPlayerGainsBuff) then
+		return 1
+	end
+	if mainTargetAurasPlayerGainsDebuff and Main_StringFind(message, mainTargetAurasPlayerGainsDebuff) then
+		return 1
+	end
+	if mainTargetAurasPlayerLosesAura and Main_StringFind(message, mainTargetAurasPlayerLosesAura) then
+		return 1
+	end
+	if mainTargetAurasPlayerChangesAura and Main_StringFind(message, mainTargetAurasPlayerChangesAura) then
+		return 1
+	end
+
+	return nil
 end
 
 function MainTargetAurasFrame_OnLoad()
@@ -3495,6 +3937,9 @@ function MainTargetAurasFrame_OnLoad()
 	this.refreshElapsed = 0
 	this:RegisterEvent("PLAYER_ENTERING_WORLD")
 	this:RegisterEvent("PLAYER_TARGET_CHANGED")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_ENEMY")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_SELF")
+	this:RegisterEvent("CHAT_MSG_COMBAT_LOG_PARTY")
 	this:Hide()
 end
 
@@ -3504,13 +3949,38 @@ function MainTargetAurasFrame_OnEvent(event)
 			Main.API:ResetUnitAuras("target")
 		end
 		this.displayElapsed = MAIN_TARGET_AURAS_UPDATE_RATE
-		this.refreshElapsed = MAIN_TARGET_AURAS_REFRESH_RATE
+		this.refreshElapsed = 0
 		MainTargetAuras_RequestSnapshot(1)
 		MainTargetAuras_UpdateDisplay()
+		return
+	end
+
+	if not MainTargetAuras_ShouldShow() then
+		return
+	end
+
+	if (event == "CHAT_MSG_COMBAT_LOG_ENEMY" or event == "CHAT_MSG_COMBAT_LOG_PARTY")
+		and MainTargetAuras_CombatMessageAffectsCurrentTarget(arg1) then
+		this.refreshElapsed = 0
+		MainTargetAuras_RequestSnapshot(1)
+		return
+	end
+
+	if event == "CHAT_MSG_COMBAT_LOG_SELF" and UnitIsUnit and UnitIsUnit("target", "player")
+		and MainTargetAuras_CombatMessageAffectsPlayer(arg1) then
+		this.refreshElapsed = 0
+		MainTargetAuras_RequestSnapshot(1)
 	end
 end
 
 function MainTargetAurasFrame_OnUpdate(elapsed)
+	local refreshRate
+
+	if not MainTargetAuras_ShouldShow() then
+		MainTargetAurasFrame:Hide()
+		return
+	end
+
 	if not UnitExists or not UnitExists("target") then
 		MainTargetAurasFrame:Hide()
 		return
@@ -3519,7 +3989,8 @@ function MainTargetAurasFrame_OnUpdate(elapsed)
 	this.displayElapsed = this.displayElapsed + elapsed
 	this.refreshElapsed = this.refreshElapsed + elapsed
 
-	if this.refreshElapsed >= MAIN_TARGET_AURAS_REFRESH_RATE then
+	refreshRate = MainTargetAuras_GetRefreshRate()
+	if refreshRate and this.refreshElapsed >= refreshRate then
 		this.refreshElapsed = 0
 		MainTargetAuras_RequestSnapshot(nil)
 	end
@@ -3558,11 +4029,20 @@ function MainTargetAuras:Enable()
 	if Main.API and Main.API.ResetUnitAuras then
 		Main.API:ResetUnitAuras("target")
 	end
+	if MainTargetAurasFrame then
+		MainTargetAurasFrame.refreshElapsed = 0
+	end
 	MainTargetAuras_RequestSnapshot(1)
 	MainTargetAuras_UpdateDisplay()
 end
 
 function MainTargetAuras:ApplyConfig()
+	if MainTargetAuras_ShouldShow() then
+		if MainTargetAurasFrame then
+			MainTargetAurasFrame.refreshElapsed = 0
+		end
+		MainTargetAuras_RequestSnapshot(1)
+	end
 	MainTargetAuras_UpdateDisplay()
 end
 

@@ -11,6 +11,7 @@ source_files=(
   "UnitFrames.lua"
   "ActionBars.lua"
   "Clock.lua"
+  "AlwaysTrack.lua"
   "OpenAllBags.lua"
   "TalentButton.lua"
   "TargetAuras.lua"

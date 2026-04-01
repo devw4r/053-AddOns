@@ -1105,65 +1105,6 @@
 						</Slider>
 					</Frames>
 				</Frame>
-				<Frame name="MainManagerNumberOption4" id="4" hidden="true">
-					<Size>
-						<AbsDimension x="224" y="40"/>
-					</Size>
-					<Anchors>
-						<Anchor point="TOPLEFT">
-							<Offset>
-								<AbsDimension x="266" y="-444"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-					<Layers>
-						<Layer level="ARTWORK">
-							<FontString name="$parentLabel" inherits="GameFontHighlightSmall" justifyH="LEFT">
-								<Size>
-									<AbsDimension x="156" y="12"/>
-								</Size>
-								<Anchors>
-									<Anchor point="TOPLEFT">
-										<Offset>
-											<AbsDimension x="4" y="0"/>
-										</Offset>
-									</Anchor>
-								</Anchors>
-							</FontString>
-							<FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER">
-								<Size>
-									<AbsDimension x="56" y="12"/>
-								</Size>
-								<Anchors>
-									<Anchor point="TOPRIGHT">
-										<Offset>
-											<AbsDimension x="-4" y="0"/>
-										</Offset>
-									</Anchor>
-								</Anchors>
-							</FontString>
-						</Layer>
-					</Layers>
-					<Frames>
-						<Slider name="$parentSlider" inherits="MainSliderTemplate" id="4">
-							<Size>
-								<AbsDimension x="186" y="17"/>
-							</Size>
-							<Anchors>
-								<Anchor point="BOTTOMLEFT">
-									<Offset>
-										<AbsDimension x="18" y="6"/>
-									</Offset>
-								</Anchor>
-							</Anchors>
-							<Scripts>
-								<OnValueChanged>
-									MainManagerNumberSlider_OnValueChanged(arg1)
-								</OnValueChanged>
-							</Scripts>
-						</Slider>
-					</Frames>
-				</Frame>
 				<Button name="MainManagerOkay" inherits="GameMenuButtonTemplate">
 					<Anchors>
 							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM">
