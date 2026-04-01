@@ -12,7 +12,7 @@ source_files=(
   "ActionBars.lua"
   "Clock.lua"
   "AlwaysTrack.lua"
-  "OpenAllBags.lua"
+  "MergedBags.lua"
   "TalentButton.lua"
   "TargetAuras.lua"
   "TargetDistance.lua"

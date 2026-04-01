@@ -6,7 +6,7 @@ Current scaffold:
 
 - adds an `Addons` button to the escape menu
 - adds an in-game manager frame
-- includes first-pass modules for buff durations, instant quest text, a movable clock, and an open-all-bags button
+- includes first-pass modules for buff durations, instant quest text, a movable clock, and merged inventory bags
 
 Notes:
 

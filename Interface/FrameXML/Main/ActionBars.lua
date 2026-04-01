@@ -494,17 +494,6 @@ local function MainActionBars_ApplyStockLayoutFixes()
 	ShapeshiftButton1:SetPoint("BOTTOMLEFT", "ShapeshiftBarFrame", "BOTTOMLEFT", 11, 3)
 end
 
-function MainActionBars_PositionOpenAllBagsButton()
-	if not MainOpenAllBagsButton or not Main.IsModuleEnabled("open_all_bags") then
-		return
-	end
-
-	MainOpenAllBagsButton:ClearAllPoints()
-	MainOpenAllBagsButton:SetWidth(26)
-	MainOpenAllBagsButton:SetHeight(26)
-	MainOpenAllBagsButton:SetPoint("BOTTOM", "CombatLogUpButton", "TOP", 0, 4)
-end
-
 local function MainActionBars_ApplyAlternativeLayout()
 	local index
 
@@ -566,7 +555,6 @@ local function MainActionBars_ApplyAlternativeLayout()
 	ChatFrame:SetPoint("BOTTOMLEFT", "UIParent", "BOTTOMLEFT", 32, 94)
 	CombatLog:ClearAllPoints()
 	CombatLog:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -32, 94)
-	MainActionBars_PositionOpenAllBagsButton()
 	MainActionBars.alternativeApplied = true
 end
 
@@ -596,7 +584,6 @@ local function MainActionBars_RestoreAlternativeLayout()
 	MainActionBars_RestoreWidgetState("CombatLog", CombatLog)
 	MainActionBars_RestoreMicroButtons()
 	MainActionBars_ApplyStockLayoutFixes()
-	MainActionBars_PositionOpenAllBagsButton()
 end
 
 local function MainActionBars_UpdateGryphonButton()

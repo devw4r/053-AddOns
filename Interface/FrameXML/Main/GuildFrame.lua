@@ -5,7 +5,11 @@ local MainGuildFrame = {
 	description = "Adds a guild roster panel accessible via /groster or the guild chat command.",
 }
 
-local GUILD_MAX_ROWS = 10
+local GUILD_MAX_ROWS = 12
+local GUILD_ROW_HEIGHT = 16
+local GUILD_REFRESH_DELAY = 0.25
+local GUILD_REFRESH_RETRY_DELAY = 0.8
+local GUILD_REFRESH_TIMEOUT = 3.5
 local GUILD_RANK_NAMES = {
 	[0] = "Guild Master",
 	[1] = "Officer",
@@ -44,6 +48,46 @@ local guildShowOffline = false
 local guildScrollOffset = 0
 local guildFiltered = {}
 local guildSelectedName = nil
+local guildRefreshPending = nil
+local guildRefreshAt = nil
+local guildRefreshRetryAt = nil
+local guildRefreshExpiresAt = nil
+
+local mainGuildOriginalGuildPromoteByName = nil
+local mainGuildOriginalGuildDemoteByName = nil
+local mainGuildOriginalGuildUninviteByName = nil
+local mainGuildOriginalGuildSetMOTD = nil
+local UpdateButtons
+
+local function IsGuildFrameVisible()
+	local frame = getglobal("MainGuildFrame")
+	return frame and frame.IsVisible and frame:IsVisible()
+end
+
+local function ClearPendingRefresh()
+	guildRefreshPending = nil
+	guildRefreshAt = nil
+	guildRefreshRetryAt = nil
+	guildRefreshExpiresAt = nil
+end
+
+local function QueuePendingRefresh()
+	local now = GetTime and GetTime() or 0
+
+	guildRefreshPending = 1
+	guildRefreshAt = now + GUILD_REFRESH_DELAY
+	guildRefreshRetryAt = now + GUILD_REFRESH_RETRY_DELAY
+	guildRefreshExpiresAt = now + GUILD_REFRESH_TIMEOUT
+end
+
+local function QueuePendingRefreshIfVisible()
+	if not IsGuildFrameVisible() then
+		return
+	end
+
+	QueuePendingRefresh()
+	UpdateButtons()
+end
 
 local function GetClassName(classId)
 	return GUILD_CLASS_NAMES[classId] or "Unknown"
@@ -191,7 +235,7 @@ local function UpdateHeader()
 	end
 end
 
-local function UpdateButtons()
+UpdateButtons = function()
 	local playerRank = GetPlayerRank()
 	local selected = GetSelectedMember()
 	local hasSelection = selected ~= nil
@@ -199,6 +243,7 @@ local function UpdateButtons()
 	local isSelf = hasSelection and selected.name == playerName
 	local selectedOnline = hasSelection and selected.online
 	local canManage = IsOfficerOrHigher()
+	local isRefreshing = guildRefreshPending and 1 or nil
 
 	local promoteBtn = getglobal("MainGuildFramePromoteButton")
 	local demoteBtn = getglobal("MainGuildFrameDemoteButton")
@@ -212,7 +257,9 @@ local function UpdateButtons()
 	if promoteBtn then
 		if canManage then
 			promoteBtn:Show()
-			if hasSelection and not isSelf and selected.rank > (playerRank + 1) then
+			if isRefreshing then
+				promoteBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > (playerRank + 1) then
 				promoteBtn:Enable()
 			else
 				promoteBtn:Disable()
@@ -225,7 +272,9 @@ local function UpdateButtons()
 	if demoteBtn then
 		if canManage then
 			demoteBtn:Show()
-			if hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
+			if isRefreshing then
+				demoteBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
 				demoteBtn:Enable()
 			else
 				demoteBtn:Disable()
@@ -238,7 +287,9 @@ local function UpdateButtons()
 	if removeBtn then
 		if canManage then
 			removeBtn:Show()
-			if hasSelection and not isSelf and selected.rank > playerRank then
+			if isRefreshing then
+				removeBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > playerRank then
 				removeBtn:Enable()
 			else
 				removeBtn:Disable()
@@ -251,7 +302,11 @@ local function UpdateButtons()
 	if inviteBtn then
 		if canManage then
 			inviteBtn:Show()
-			inviteBtn:Enable()
+			if isRefreshing then
+				inviteBtn:Disable()
+			else
+				inviteBtn:Enable()
+			end
 		else
 			inviteBtn:Hide()
 		end
@@ -260,7 +315,11 @@ local function UpdateButtons()
 	if motdBtn then
 		if IsGuildMaster() then
 			motdBtn:Show()
-			motdBtn:Enable()
+			if isRefreshing then
+				motdBtn:Disable()
+			else
+				motdBtn:Enable()
+			end
 		else
 			motdBtn:Hide()
 		end
@@ -354,9 +413,23 @@ local function UpdateScrollBar()
 	if guildScrollOffset > maxScroll then guildScrollOffset = maxScroll end
 	if guildScrollOffset < 0 then guildScrollOffset = 0 end
 
-	if MainGuildFrameScrollBar then
-		MainGuildFrameScrollBar:SetMinMaxValues(0, maxScroll)
-		MainGuildFrameScrollBar:SetValue(guildScrollOffset)
+	if MainGuildFrameScrollFrame and FauxScrollFrame_Update then
+		FauxScrollFrame_Update(MainGuildFrameScrollFrame, totalRows, GUILD_MAX_ROWS, GUILD_ROW_HEIGHT)
+		FauxScrollFrame_SetOffset(MainGuildFrameScrollFrame, guildScrollOffset)
+	end
+
+	if MainGuildFrameScrollFrameScrollBar then
+		MainGuildFrameScrollFrameScrollBar:SetValue(guildScrollOffset * GUILD_ROW_HEIGHT)
+	end
+end
+
+local function ResetScroll()
+	guildScrollOffset = 0
+	if MainGuildFrameScrollFrame and FauxScrollFrame_SetOffset then
+		FauxScrollFrame_SetOffset(MainGuildFrameScrollFrame, guildScrollOffset)
+	end
+	if MainGuildFrameScrollFrameScrollBar then
+		MainGuildFrameScrollFrameScrollBar:SetValue(0)
 	end
 end
 
@@ -368,9 +441,9 @@ local function Refresh()
 	UpdateButtons()
 end
 
-local function RequestRoster()
+local function RequestRoster(force)
 	if Main.API and Main.API.RequestGuildRoster then
-		Main.API:RequestGuildRoster(1)
+		Main.API:RequestGuildRoster(force and 1 or nil)
 	end
 end
 
@@ -384,27 +457,23 @@ local function SetSort(field, defaultAsc)
 	Refresh()
 end
 
-function MainGuildFrameScrollBar_OnValueChanged()
-	guildScrollOffset = floor(this:GetValue() + 0.5)
-	UpdateRows()
+function MainGuildFrameScrollFrame_OnVerticalScroll()
+	FauxScrollFrame_OnVerticalScroll(GUILD_ROW_HEIGHT, function()
+		guildScrollOffset = FauxScrollFrame_GetOffset(MainGuildFrameScrollFrame) or 0
+		UpdateRows()
+	end)
 end
 
 function MainGuildFrame_OnMouseWheel(delta)
+	if not MainGuildFrameScrollFrame or not MainGuildFrameScrollFrame:IsVisible() or not MainGuildFrameScrollFrameScrollBar then
+		return
+	end
+
 	if delta > 0 then
-		guildScrollOffset = guildScrollOffset - 1
+		MainGuildFrameScrollFrameScrollBar:SetValue(MainGuildFrameScrollFrameScrollBar:GetValue() - GUILD_ROW_HEIGHT)
 	else
-		guildScrollOffset = guildScrollOffset + 1
+		MainGuildFrameScrollFrameScrollBar:SetValue(MainGuildFrameScrollFrameScrollBar:GetValue() + GUILD_ROW_HEIGHT)
 	end
-
-	local maxScroll = Main_ArrayCount(guildFiltered) - GUILD_MAX_ROWS
-	if maxScroll < 0 then maxScroll = 0 end
-	if guildScrollOffset < 0 then guildScrollOffset = 0 end
-	if guildScrollOffset > maxScroll then guildScrollOffset = maxScroll end
-
-	if MainGuildFrameScrollBar then
-		MainGuildFrameScrollBar:SetValue(guildScrollOffset)
-	end
-	UpdateRows()
 end
 
 function MainGuildRow_OnClick()
@@ -423,7 +492,7 @@ function MainGuildFrameSortOnline_OnClick()  SetSort("online", true) end
 
 function MainGuildFrameOnlineToggle_OnClick()
 	guildShowOffline = not guildShowOffline
-	guildScrollOffset = 0
+	ResetScroll()
 	Refresh()
 end
 
@@ -473,12 +542,10 @@ function MainGuildFrameSetMotdButton_OnClick()
 		Main_Print("Only the Guild Master can set the MOTD.")
 		return
 	end
-	if GuildSetMOTD then
+	if ChatFrameEditBox then
 		local editBox = ChatFrameEditBox
-		if editBox then
-			editBox:Show()
-			editBox:SetText("/gmotd ")
-		end
+		editBox:Show()
+		editBox:SetText("/gmotd ")
 	end
 end
 
@@ -499,7 +566,8 @@ function MainGuildFrame_OnLoad()
 end
 
 function MainGuildFrame_OnShow()
-	guildScrollOffset = 0
+	ResetScroll()
+	ClearPendingRefresh()
 	guildSelectedName = nil
 	RequestRoster()
 	Refresh()
@@ -513,21 +581,74 @@ end
 
 function MainGuildFrame_OnUpdate(elapsed)
 	this.elapsed = (this.elapsed or 0) + elapsed
-	if this.elapsed < 0.5 then return end
+	if this.elapsed < 0.1 then return end
 	this.elapsed = 0
+
+	if guildRefreshPending then
+		local now = GetTime and GetTime() or 0
+
+		if guildRefreshAt and now >= guildRefreshAt then
+			RequestRoster(1)
+			guildRefreshAt = nil
+		end
+		if guildRefreshRetryAt and now >= guildRefreshRetryAt then
+			RequestRoster(1)
+			guildRefreshRetryAt = nil
+		end
+		if guildRefreshExpiresAt and now >= guildRefreshExpiresAt then
+			ClearPendingRefresh()
+			UpdateButtons()
+		end
+	end
 
 	local roster = Main.API and Main.API:GetGuildRoster() or {}
 	if roster.loaded then
+		ClearPendingRefresh()
 		Refresh()
 		roster.loaded = nil
 	end
 end
 
 function MainGuildFrame_OnHide()
+	ClearPendingRefresh()
 	guildSelectedName = nil
 end
 
 local mainGuildOriginalFriendsFrameUpdate = nil
+
+local function MainGuildFrame_HookGuildActions()
+	if not mainGuildOriginalGuildPromoteByName and GuildPromoteByName then
+		mainGuildOriginalGuildPromoteByName = GuildPromoteByName
+		GuildPromoteByName = function(name)
+			mainGuildOriginalGuildPromoteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildDemoteByName and GuildDemoteByName then
+		mainGuildOriginalGuildDemoteByName = GuildDemoteByName
+		GuildDemoteByName = function(name)
+			mainGuildOriginalGuildDemoteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildUninviteByName and GuildUninviteByName then
+		mainGuildOriginalGuildUninviteByName = GuildUninviteByName
+		GuildUninviteByName = function(name)
+			mainGuildOriginalGuildUninviteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildSetMOTD and GuildSetMOTD then
+		mainGuildOriginalGuildSetMOTD = GuildSetMOTD
+		GuildSetMOTD = function(message)
+			mainGuildOriginalGuildSetMOTD(message)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+end
 
 local function MainGuildFrame_HookFriendsFrame()
 	if mainGuildOriginalFriendsFrameUpdate then
@@ -564,6 +685,7 @@ local function MainGuildFrame_HookFriendsFrame()
 end
 
 function MainGuildFrame:Init()
+	MainGuildFrame_HookGuildActions()
 	MainGuildFrame_HookFriendsFrame()
 end
 

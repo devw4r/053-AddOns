@@ -2481,17 +2481,6 @@ local function MainActionBars_ApplyStockLayoutFixes()
 	ShapeshiftButton1:SetPoint("BOTTOMLEFT", "ShapeshiftBarFrame", "BOTTOMLEFT", 11, 3)
 end
 
-function MainActionBars_PositionOpenAllBagsButton()
-	if not MainOpenAllBagsButton or not Main.IsModuleEnabled("open_all_bags") then
-		return
-	end
-
-	MainOpenAllBagsButton:ClearAllPoints()
-	MainOpenAllBagsButton:SetWidth(26)
-	MainOpenAllBagsButton:SetHeight(26)
-	MainOpenAllBagsButton:SetPoint("BOTTOM", "CombatLogUpButton", "TOP", 0, 4)
-end
-
 local function MainActionBars_ApplyAlternativeLayout()
 	local index
 
@@ -2553,7 +2542,6 @@ local function MainActionBars_ApplyAlternativeLayout()
 	ChatFrame:SetPoint("BOTTOMLEFT", "UIParent", "BOTTOMLEFT", 32, 94)
 	CombatLog:ClearAllPoints()
 	CombatLog:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -32, 94)
-	MainActionBars_PositionOpenAllBagsButton()
 	MainActionBars.alternativeApplied = true
 end
 
@@ -2583,7 +2571,6 @@ local function MainActionBars_RestoreAlternativeLayout()
 	MainActionBars_RestoreWidgetState("CombatLog", CombatLog)
 	MainActionBars_RestoreMicroButtons()
 	MainActionBars_ApplyStockLayoutFixes()
-	MainActionBars_PositionOpenAllBagsButton()
 end
 
 local function MainActionBars_UpdateGryphonButton()
@@ -3307,86 +3294,533 @@ Main.RegisterModule("always_track", MainAlwaysTrack)
 end
 -- END AlwaysTrack.lua
 
--- BEGIN OpenAllBags.lua
+-- BEGIN MergedBags.lua
 do
-local MainOpenAllBags = {
-	name = "Open All Bags",
-	description = "Adds a button near the backpack to toggle all bags.",
+local MainMergedBags = {
+	name = "Merged Bags",
+	description = "Replaces the stock inventory bags with one merged frame.",
 	managerHidden = 1,
-	options = {
-		{
-			type = "toggle",
-			key = "actionbars_show_open_bags",
-			label = "Show open bags button",
-			defaultValue = false,
-			managerOrder = 10,
-			requiresModule = false,
-		},
-	},
 }
 
-local function MainOpenAllBags_ShouldShow()
-	return Main.IsModuleEnabled("open_all_bags") and Main.GetBoolSetting("actionbars_show_open_bags", false)
+local MAIN_MERGED_BAGS_ID = "merged_bags"
+local MAIN_MERGED_BAGS_FRAME_NAME = "MainMergedBagsFrame"
+local MAIN_MERGED_BAGS_BAG_IDS = { 0, 1, 2, 3, 4 }
+local MAIN_MERGED_BAGS_COLUMNS = 8
+local MAIN_MERGED_BAGS_ITEM_SIZE = 37
+local MAIN_MERGED_BAGS_ITEM_SPACING = 3
+local MAIN_MERGED_BAGS_SIDE_PADDING = 10
+local MAIN_MERGED_BAGS_TOP_PADDING = 30
+local MAIN_MERGED_BAGS_BOTTOM_PADDING = 12
+local MAIN_MERGED_BAGS_MIN_WIDTH = 190
+local MAIN_MERGED_BAGS_MIN_HEIGHT = 82
+local MAIN_MERGED_BAGS_MAX_BAG_SLOTS = MAX_CONTAINER_ITEMS or 20
+
+local mainMergedBagsVisibleCount = 0
+local mainMergedBagsManualOpen = nil
+local mainMergedBagsOriginals = {}
+local mainMergedBagsOverridesInstalled = nil
+
+local function MainMergedBags_GetFrame()
+	return getglobal(MAIN_MERGED_BAGS_FRAME_NAME)
 end
 
-function MainOpenAllBags_UpdateState()
-	if not MainOpenAllBagsButton then
+local function MainMergedBags_IsEnabled()
+	return Main.IsModuleEnabled and Main.IsModuleEnabled(MAIN_MERGED_BAGS_ID) and true or false
+end
+
+local function MainMergedBags_IsControlledBag(bagId)
+	bagId = Main_ToNumber(bagId, -999)
+	return bagId >= 0 and bagId <= 4
+end
+
+local function MainMergedBags_CanOpen()
+	local frame
+
+	frame = MainMergedBags_GetFrame()
+	if CanOpenPanels and not CanOpenPanels() and not (frame and frame:IsVisible()) then
+		return nil
+	end
+
+	return 1
+end
+
+local function MainMergedBags_RegisterSpecialFrame(frameName)
+	local index
+
+	if not UISpecialFrames or not frameName then
 		return
 	end
 
-	if MainOpenAllBags_ShouldShow() then
-		MainOpenAllBagsButton:Show()
-		if MainActionBars_PositionOpenAllBagsButton then
-			MainActionBars_PositionOpenAllBagsButton()
+	for index = 1, Main_ArrayCount(UISpecialFrames) do
+		if UISpecialFrames[index] == frameName then
+			return
 		end
-	else
-		MainOpenAllBagsButton:Hide()
+	end
+
+	Main_ArrayInsert(UISpecialFrames, frameName)
+end
+
+local function MainMergedBags_GetBagFrame(bagId)
+	return getglobal(MAIN_MERGED_BAGS_FRAME_NAME .. "Bag" .. bagId)
+end
+
+local function MainMergedBags_GetButton(bagId, slotId)
+	return getglobal(MAIN_MERGED_BAGS_FRAME_NAME .. "Bag" .. bagId .. "Item" .. slotId)
+end
+
+local function MainMergedBags_CloseStockFrames()
+	local index
+	local frame
+	local maxFrames
+
+	maxFrames = NUM_CONTAINER_FRAMES or 16
+	for index = 1, maxFrames do
+		frame = getglobal("ContainerFrame" .. index)
+		if frame and frame:IsVisible() then
+			frame:Hide()
+		end
 	end
 end
 
-function MainOpenAllBagsButton_OnLoad()
-	this:RegisterForClicks("LeftButtonUp")
+local function MainMergedBags_UpdateBagButtonChecks(isShown)
+	local index
+	local bagButton
+
+	if MainMenuBarBackpackButton and MainMenuBarBackpackButton.SetChecked then
+		MainMenuBarBackpackButton:SetChecked(isShown and 1 or 0)
+	end
+
+	for index = 0, 3 do
+		bagButton = getglobal("CharacterBag" .. index .. "Slot")
+		if bagButton and bagButton.SetChecked then
+			if isShown and GetContainerNumSlots and GetContainerNumSlots(index + 1) > 0 then
+				bagButton:SetChecked(1)
+			else
+				bagButton:SetChecked(0)
+			end
+		end
+	end
 end
 
-function MainOpenAllBagsButton_OnClick()
-	OpenAllBags()
+local function MainMergedBags_UpdateItem(button)
+	local bagId
+	local slotId
+	local texture
+	local itemCount
+	local locked
+	local cooldown
+
+	if not button then
+		return
+	end
+
+	bagId = button:GetParent() and button:GetParent():GetID() or nil
+	slotId = button:GetID()
+	if bagId == nil or not slotId or not GetContainerItemInfo then
+		return
+	end
+
+	texture, itemCount, locked = GetContainerItemInfo(bagId, slotId)
+	SetItemButtonTexture(button, texture)
+	SetItemButtonCount(button, itemCount)
+
+	if locked then
+		SetItemButtonTextureVertexColor(button, 0.5, 0.5, 0.5)
+	else
+		SetItemButtonTextureVertexColor(button, 1.0, 1.0, 1.0)
+	end
+
+	if texture then
+		if ContainerFrame_UpdateCooldown then
+			ContainerFrame_UpdateCooldown(bagId, button)
+		end
+	else
+		cooldown = getglobal(button:GetName() .. "Cooldown")
+		if cooldown then
+			cooldown:Hide()
+		end
+	end
+
+	if SetItemButtonNormalTextureVertexColor then
+		SetItemButtonNormalTextureVertexColor(button, 1, 1, 1)
+	end
 end
 
-function MainOpenAllBagsButton_OnEnter()
-	GameTooltip:SetOwner(this, "ANCHOR_LEFT")
-	GameTooltip:AddLine("Open Bags")
-	GameTooltip:AddLine("Click to open or close all bags.")
-	GameTooltip:Show()
+local function MainMergedBags_UpdateVisibleItems()
+	local bagIndex
+	local bagId
+	local slotId
+	local button
+
+	for bagIndex = 1, Main_ArrayCount(MAIN_MERGED_BAGS_BAG_IDS) do
+		bagId = MAIN_MERGED_BAGS_BAG_IDS[bagIndex]
+		for slotId = 1, MAIN_MERGED_BAGS_MAX_BAG_SLOTS do
+			button = MainMergedBags_GetButton(bagId, slotId)
+			if button and button:IsShown() then
+				MainMergedBags_UpdateItem(button)
+			end
+		end
+	end
 end
 
-function MainOpenAllBagsButton_OnLeave()
-	GameTooltip:Hide()
+local function MainMergedBags_UpdateLayout()
+	local frame
+	local rows
+	local usedColumns
+	local width
+	local height
+
+	frame = MainMergedBags_GetFrame()
+	if not frame then
+		return
+	end
+
+	if mainMergedBagsVisibleCount > 0 then
+		rows = ceil(mainMergedBagsVisibleCount / MAIN_MERGED_BAGS_COLUMNS)
+		if mainMergedBagsVisibleCount < MAIN_MERGED_BAGS_COLUMNS then
+			usedColumns = mainMergedBagsVisibleCount
+		else
+			usedColumns = MAIN_MERGED_BAGS_COLUMNS
+		end
+		width = (usedColumns * MAIN_MERGED_BAGS_ITEM_SIZE) + ((usedColumns - 1) * MAIN_MERGED_BAGS_ITEM_SPACING) + (MAIN_MERGED_BAGS_SIDE_PADDING * 2)
+		height = (rows * MAIN_MERGED_BAGS_ITEM_SIZE) + ((rows - 1) * MAIN_MERGED_BAGS_ITEM_SPACING) + MAIN_MERGED_BAGS_TOP_PADDING + MAIN_MERGED_BAGS_BOTTOM_PADDING
+	else
+		width = MAIN_MERGED_BAGS_MIN_WIDTH
+		height = MAIN_MERGED_BAGS_MIN_HEIGHT
+	end
+
+	if width < MAIN_MERGED_BAGS_MIN_WIDTH then
+		width = MAIN_MERGED_BAGS_MIN_WIDTH
+	end
+	if height < MAIN_MERGED_BAGS_MIN_HEIGHT then
+		height = MAIN_MERGED_BAGS_MIN_HEIGHT
+	end
+
+	frame:SetWidth(width)
+	frame:SetHeight(height)
 end
 
-function MainOpenAllBags:Init()
-	MainOpenAllBags_UpdateState()
+local function MainMergedBags_Generate()
+	local frame
+	local bagIndex
+	local bagId
+	local bagSize
+	local slotId
+	local button
+	local visibleIndex
+	local column
+	local row
+
+	frame = MainMergedBags_GetFrame()
+	if not frame then
+		return
+	end
+
+	visibleIndex = 0
+
+	for bagIndex = 1, Main_ArrayCount(MAIN_MERGED_BAGS_BAG_IDS) do
+		bagId = MAIN_MERGED_BAGS_BAG_IDS[bagIndex]
+		bagSize = GetContainerNumSlots and GetContainerNumSlots(bagId) or 0
+		bagSize = Main_ToNumber(bagSize, 0) or 0
+
+		for slotId = 1, MAIN_MERGED_BAGS_MAX_BAG_SLOTS do
+			button = MainMergedBags_GetButton(bagId, slotId)
+			if button then
+				if slotId <= bagSize then
+					visibleIndex = visibleIndex + 1
+					button:SetID(slotId)
+					button:ClearAllPoints()
+					column = Main_Mod(visibleIndex - 1, MAIN_MERGED_BAGS_COLUMNS)
+					row = floor((visibleIndex - 1) / MAIN_MERGED_BAGS_COLUMNS)
+						button:SetPoint(
+							"TOPLEFT",
+							MAIN_MERGED_BAGS_FRAME_NAME,
+							"TOPLEFT",
+							MAIN_MERGED_BAGS_SIDE_PADDING + (column * (MAIN_MERGED_BAGS_ITEM_SIZE + MAIN_MERGED_BAGS_ITEM_SPACING)),
+							-(MAIN_MERGED_BAGS_TOP_PADDING + (row * (MAIN_MERGED_BAGS_ITEM_SIZE + MAIN_MERGED_BAGS_ITEM_SPACING)))
+					)
+					MainMergedBags_UpdateItem(button)
+					button:Show()
+				else
+					button:Hide()
+				end
+			end
+		end
+	end
+
+	mainMergedBagsVisibleCount = visibleIndex
+	MainMergedBags_UpdateLayout()
 end
 
-function MainOpenAllBags:Enable()
-	MainOpenAllBags_UpdateState()
+local function MainMergedBags_Open(automatic)
+	local frame
+
+	if not MainMergedBags_CanOpen() then
+		return
+	end
+
+	frame = MainMergedBags_GetFrame()
+	if not frame then
+		return
+	end
+
+	MainMergedBags_CloseStockFrames()
+	MainMergedBags_Generate()
+	frame:Show()
+	if not automatic then
+		mainMergedBagsManualOpen = 1
+	end
 end
 
-function MainOpenAllBags:Disable()
-	MainOpenAllBagsButton:Hide()
+local function MainMergedBags_Close(automatic)
+	local frame
+
+	frame = MainMergedBags_GetFrame()
+	if not frame then
+		mainMergedBagsManualOpen = nil
+		return
+	end
+
+	if automatic and mainMergedBagsManualOpen then
+		return
+	end
+
+	mainMergedBagsManualOpen = nil
+	frame:Hide()
 end
 
-function MainOpenAllBags:ApplyConfig()
-	MainOpenAllBags_UpdateState()
+local function MainMergedBags_Toggle()
+	local frame
+
+	frame = MainMergedBags_GetFrame()
+	if frame and frame:IsVisible() then
+		MainMergedBags_Close()
+	else
+		MainMergedBags_Open()
+	end
 end
 
-function MainOpenAllBags:OnUILayoutChanged()
-	MainOpenAllBags_UpdateState()
+local function MainMergedBags_InstallOverrides()
+	if mainMergedBagsOverridesInstalled then
+		return
+	end
+
+	mainMergedBagsOriginals.ToggleBag = ToggleBag
+	mainMergedBagsOriginals.ToggleBackpack = ToggleBackpack
+	mainMergedBagsOriginals.OpenBag = OpenBag
+	mainMergedBagsOriginals.CloseBag = CloseBag
+	mainMergedBagsOriginals.IsBagOpen = IsBagOpen
+	mainMergedBagsOriginals.OpenBackpack = OpenBackpack
+	mainMergedBagsOriginals.CloseBackpack = CloseBackpack
+	mainMergedBagsOriginals.OpenAllBags = OpenAllBags
+	mainMergedBagsOriginals.CloseAllBags = CloseAllBags
+
+	function ToggleBag(id)
+		if MainMergedBags_IsEnabled() and MainMergedBags_IsControlledBag(id) then
+			MainMergedBags_Toggle()
+			return
+		end
+
+		if mainMergedBagsOriginals.ToggleBag then
+			mainMergedBagsOriginals.ToggleBag(id)
+		end
+	end
+
+	function ToggleBackpack()
+		if MainMergedBags_IsEnabled() then
+			MainMergedBags_Toggle()
+			return
+		end
+
+		if mainMergedBagsOriginals.ToggleBackpack then
+			mainMergedBagsOriginals.ToggleBackpack()
+		end
+	end
+
+	function OpenBag(id)
+		if MainMergedBags_IsEnabled() and MainMergedBags_IsControlledBag(id) then
+			MainMergedBags_Open(1)
+			return
+		end
+
+		if mainMergedBagsOriginals.OpenBag then
+			mainMergedBagsOriginals.OpenBag(id)
+		end
+	end
+
+	function CloseBag(id)
+		if MainMergedBags_IsEnabled() and MainMergedBags_IsControlledBag(id) then
+			MainMergedBags_Close(1)
+			return
+		end
+
+		if mainMergedBagsOriginals.CloseBag then
+			mainMergedBagsOriginals.CloseBag(id)
+		end
+	end
+
+	function IsBagOpen(id)
+		local frame
+
+		if MainMergedBags_IsEnabled() and MainMergedBags_IsControlledBag(id) then
+			frame = MainMergedBags_GetFrame()
+			if frame and frame:IsVisible() then
+				return 1
+			end
+			return nil
+		end
+
+		if mainMergedBagsOriginals.IsBagOpen then
+			return mainMergedBagsOriginals.IsBagOpen(id)
+		end
+
+		return nil
+	end
+
+	function OpenBackpack()
+		if MainMergedBags_IsEnabled() then
+			MainMergedBags_Open(1)
+			return
+		end
+
+		if mainMergedBagsOriginals.OpenBackpack then
+			mainMergedBagsOriginals.OpenBackpack()
+		end
+	end
+
+	function CloseBackpack()
+		if MainMergedBags_IsEnabled() then
+			MainMergedBags_Close(1)
+			return
+		end
+
+		if mainMergedBagsOriginals.CloseBackpack then
+			mainMergedBagsOriginals.CloseBackpack()
+		end
+	end
+
+	function OpenAllBags(forceOpen)
+		if MainMergedBags_IsEnabled() then
+			if forceOpen then
+				MainMergedBags_Open(1)
+			else
+				MainMergedBags_Toggle()
+			end
+			return
+		end
+
+		if mainMergedBagsOriginals.OpenAllBags then
+			mainMergedBagsOriginals.OpenAllBags(forceOpen)
+		end
+	end
+
+	function CloseAllBags()
+		if MainMergedBags_IsEnabled() then
+			MainMergedBags_Close()
+			return
+		end
+
+		if mainMergedBagsOriginals.CloseAllBags then
+			mainMergedBagsOriginals.CloseAllBags()
+		end
+	end
+
+	mainMergedBagsOverridesInstalled = 1
 end
 
-Main.RegisterModule("open_all_bags", MainOpenAllBags)
+local function MainMergedBags_OnEnteringWorld()
+	local frame
+
+	if not MainMergedBags_IsEnabled() then
+		return
+	end
+
+	frame = MainMergedBags_GetFrame()
+	MainMergedBags_CloseStockFrames()
+	if frame and frame:IsVisible() then
+		MainMergedBags_Generate()
+	end
+end
+
+local function MainMergedBags_OnBagUpdate()
+	local frame
+
+	if not MainMergedBags_IsEnabled() then
+		return
+	end
+
+	frame = MainMergedBags_GetFrame()
+	if frame and frame:IsVisible() then
+		MainMergedBags_Generate()
+	end
+end
+
+local function MainMergedBags_OnCooldownOrLockChanged()
+	local frame
+
+	if not MainMergedBags_IsEnabled() then
+		return
+	end
+
+	frame = MainMergedBags_GetFrame()
+	if frame and frame:IsVisible() then
+		MainMergedBags_UpdateVisibleItems()
+	end
+end
+
+function MainMergedBagsFrame_OnShow()
+	MainMergedBags_UpdateBagButtonChecks(1)
+	if PlaySound then
+		PlaySound("igBackPackOpen")
+	end
+end
+
+function MainMergedBagsFrame_OnHide()
+	MainMergedBags_UpdateBagButtonChecks(nil)
+	if PlaySound then
+		PlaySound("igBackPackClose")
+	end
+end
+
+function MainMergedBagsCloseButton_OnClick()
+	MainMergedBags_Close()
+end
+
+function MainMergedBags:Init()
+	MainMergedBags_RegisterSpecialFrame(MAIN_MERGED_BAGS_FRAME_NAME)
+	MainMergedBags_InstallOverrides()
+	Main.RegisterEventHandler("PLAYER_ENTERING_WORLD", "merged_bags_entering_world", MainMergedBags_OnEnteringWorld)
+	Main.RegisterEventHandler("BAG_UPDATE", "merged_bags_bag_update", MainMergedBags_OnBagUpdate)
+	Main.RegisterEventHandler("BAG_UPDATE_COOLDOWN", "merged_bags_cooldown", MainMergedBags_OnCooldownOrLockChanged)
+	Main.RegisterEventHandler("ITEM_LOCK_CHANGED", "merged_bags_lock", MainMergedBags_OnCooldownOrLockChanged)
+end
+
+function MainMergedBags:Enable()
+	local frame
+
+	frame = MainMergedBags_GetFrame()
+	MainMergedBags_CloseStockFrames()
+	if frame and frame:IsVisible() then
+		MainMergedBags_Generate()
+	end
+end
+
+function MainMergedBags:Disable()
+	MainMergedBags_Close()
+end
+
+function MainMergedBags:ApplyConfig()
+	if MainMergedBags_IsEnabled() then
+		self:Enable()
+	else
+		self:Disable()
+	end
+end
+
+Main.RegisterModule(MAIN_MERGED_BAGS_ID, MainMergedBags)
 
 end
--- END OpenAllBags.lua
+-- END MergedBags.lua
 
 -- BEGIN TalentButton.lua
 do
@@ -5484,7 +5918,11 @@ local MainGuildFrame = {
 	description = "Adds a guild roster panel accessible via /groster or the guild chat command.",
 }
 
-local GUILD_MAX_ROWS = 10
+local GUILD_MAX_ROWS = 12
+local GUILD_ROW_HEIGHT = 16
+local GUILD_REFRESH_DELAY = 0.25
+local GUILD_REFRESH_RETRY_DELAY = 0.8
+local GUILD_REFRESH_TIMEOUT = 3.5
 local GUILD_RANK_NAMES = {
 	[0] = "Guild Master",
 	[1] = "Officer",
@@ -5523,6 +5961,46 @@ local guildShowOffline = false
 local guildScrollOffset = 0
 local guildFiltered = {}
 local guildSelectedName = nil
+local guildRefreshPending = nil
+local guildRefreshAt = nil
+local guildRefreshRetryAt = nil
+local guildRefreshExpiresAt = nil
+
+local mainGuildOriginalGuildPromoteByName = nil
+local mainGuildOriginalGuildDemoteByName = nil
+local mainGuildOriginalGuildUninviteByName = nil
+local mainGuildOriginalGuildSetMOTD = nil
+local UpdateButtons
+
+local function IsGuildFrameVisible()
+	local frame = getglobal("MainGuildFrame")
+	return frame and frame.IsVisible and frame:IsVisible()
+end
+
+local function ClearPendingRefresh()
+	guildRefreshPending = nil
+	guildRefreshAt = nil
+	guildRefreshRetryAt = nil
+	guildRefreshExpiresAt = nil
+end
+
+local function QueuePendingRefresh()
+	local now = GetTime and GetTime() or 0
+
+	guildRefreshPending = 1
+	guildRefreshAt = now + GUILD_REFRESH_DELAY
+	guildRefreshRetryAt = now + GUILD_REFRESH_RETRY_DELAY
+	guildRefreshExpiresAt = now + GUILD_REFRESH_TIMEOUT
+end
+
+local function QueuePendingRefreshIfVisible()
+	if not IsGuildFrameVisible() then
+		return
+	end
+
+	QueuePendingRefresh()
+	UpdateButtons()
+end
 
 local function GetClassName(classId)
 	return GUILD_CLASS_NAMES[classId] or "Unknown"
@@ -5670,7 +6148,7 @@ local function UpdateHeader()
 	end
 end
 
-local function UpdateButtons()
+UpdateButtons = function()
 	local playerRank = GetPlayerRank()
 	local selected = GetSelectedMember()
 	local hasSelection = selected ~= nil
@@ -5678,6 +6156,7 @@ local function UpdateButtons()
 	local isSelf = hasSelection and selected.name == playerName
 	local selectedOnline = hasSelection and selected.online
 	local canManage = IsOfficerOrHigher()
+	local isRefreshing = guildRefreshPending and 1 or nil
 
 	local promoteBtn = getglobal("MainGuildFramePromoteButton")
 	local demoteBtn = getglobal("MainGuildFrameDemoteButton")
@@ -5691,7 +6170,9 @@ local function UpdateButtons()
 	if promoteBtn then
 		if canManage then
 			promoteBtn:Show()
-			if hasSelection and not isSelf and selected.rank > (playerRank + 1) then
+			if isRefreshing then
+				promoteBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > (playerRank + 1) then
 				promoteBtn:Enable()
 			else
 				promoteBtn:Disable()
@@ -5704,7 +6185,9 @@ local function UpdateButtons()
 	if demoteBtn then
 		if canManage then
 			demoteBtn:Show()
-			if hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
+			if isRefreshing then
+				demoteBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
 				demoteBtn:Enable()
 			else
 				demoteBtn:Disable()
@@ -5717,7 +6200,9 @@ local function UpdateButtons()
 	if removeBtn then
 		if canManage then
 			removeBtn:Show()
-			if hasSelection and not isSelf and selected.rank > playerRank then
+			if isRefreshing then
+				removeBtn:Disable()
+			elseif hasSelection and not isSelf and selected.rank > playerRank then
 				removeBtn:Enable()
 			else
 				removeBtn:Disable()
@@ -5730,7 +6215,11 @@ local function UpdateButtons()
 	if inviteBtn then
 		if canManage then
 			inviteBtn:Show()
-			inviteBtn:Enable()
+			if isRefreshing then
+				inviteBtn:Disable()
+			else
+				inviteBtn:Enable()
+			end
 		else
 			inviteBtn:Hide()
 		end
@@ -5739,7 +6228,11 @@ local function UpdateButtons()
 	if motdBtn then
 		if IsGuildMaster() then
 			motdBtn:Show()
-			motdBtn:Enable()
+			if isRefreshing then
+				motdBtn:Disable()
+			else
+				motdBtn:Enable()
+			end
 		else
 			motdBtn:Hide()
 		end
@@ -5833,9 +6326,23 @@ local function UpdateScrollBar()
 	if guildScrollOffset > maxScroll then guildScrollOffset = maxScroll end
 	if guildScrollOffset < 0 then guildScrollOffset = 0 end
 
-	if MainGuildFrameScrollBar then
-		MainGuildFrameScrollBar:SetMinMaxValues(0, maxScroll)
-		MainGuildFrameScrollBar:SetValue(guildScrollOffset)
+	if MainGuildFrameScrollFrame and FauxScrollFrame_Update then
+		FauxScrollFrame_Update(MainGuildFrameScrollFrame, totalRows, GUILD_MAX_ROWS, GUILD_ROW_HEIGHT)
+		FauxScrollFrame_SetOffset(MainGuildFrameScrollFrame, guildScrollOffset)
+	end
+
+	if MainGuildFrameScrollFrameScrollBar then
+		MainGuildFrameScrollFrameScrollBar:SetValue(guildScrollOffset * GUILD_ROW_HEIGHT)
+	end
+end
+
+local function ResetScroll()
+	guildScrollOffset = 0
+	if MainGuildFrameScrollFrame and FauxScrollFrame_SetOffset then
+		FauxScrollFrame_SetOffset(MainGuildFrameScrollFrame, guildScrollOffset)
+	end
+	if MainGuildFrameScrollFrameScrollBar then
+		MainGuildFrameScrollFrameScrollBar:SetValue(0)
 	end
 end
 
@@ -5847,9 +6354,9 @@ local function Refresh()
 	UpdateButtons()
 end
 
-local function RequestRoster()
+local function RequestRoster(force)
 	if Main.API and Main.API.RequestGuildRoster then
-		Main.API:RequestGuildRoster(1)
+		Main.API:RequestGuildRoster(force and 1 or nil)
 	end
 end
 
@@ -5863,27 +6370,23 @@ local function SetSort(field, defaultAsc)
 	Refresh()
 end
 
-function MainGuildFrameScrollBar_OnValueChanged()
-	guildScrollOffset = floor(this:GetValue() + 0.5)
-	UpdateRows()
+function MainGuildFrameScrollFrame_OnVerticalScroll()
+	FauxScrollFrame_OnVerticalScroll(GUILD_ROW_HEIGHT, function()
+		guildScrollOffset = FauxScrollFrame_GetOffset(MainGuildFrameScrollFrame) or 0
+		UpdateRows()
+	end)
 end
 
 function MainGuildFrame_OnMouseWheel(delta)
+	if not MainGuildFrameScrollFrame or not MainGuildFrameScrollFrame:IsVisible() or not MainGuildFrameScrollFrameScrollBar then
+		return
+	end
+
 	if delta > 0 then
-		guildScrollOffset = guildScrollOffset - 1
+		MainGuildFrameScrollFrameScrollBar:SetValue(MainGuildFrameScrollFrameScrollBar:GetValue() - GUILD_ROW_HEIGHT)
 	else
-		guildScrollOffset = guildScrollOffset + 1
+		MainGuildFrameScrollFrameScrollBar:SetValue(MainGuildFrameScrollFrameScrollBar:GetValue() + GUILD_ROW_HEIGHT)
 	end
-
-	local maxScroll = Main_ArrayCount(guildFiltered) - GUILD_MAX_ROWS
-	if maxScroll < 0 then maxScroll = 0 end
-	if guildScrollOffset < 0 then guildScrollOffset = 0 end
-	if guildScrollOffset > maxScroll then guildScrollOffset = maxScroll end
-
-	if MainGuildFrameScrollBar then
-		MainGuildFrameScrollBar:SetValue(guildScrollOffset)
-	end
-	UpdateRows()
 end
 
 function MainGuildRow_OnClick()
@@ -5902,7 +6405,7 @@ function MainGuildFrameSortOnline_OnClick()  SetSort("online", true) end
 
 function MainGuildFrameOnlineToggle_OnClick()
 	guildShowOffline = not guildShowOffline
-	guildScrollOffset = 0
+	ResetScroll()
 	Refresh()
 end
 
@@ -5952,12 +6455,10 @@ function MainGuildFrameSetMotdButton_OnClick()
 		Main_Print("Only the Guild Master can set the MOTD.")
 		return
 	end
-	if GuildSetMOTD then
+	if ChatFrameEditBox then
 		local editBox = ChatFrameEditBox
-		if editBox then
-			editBox:Show()
-			editBox:SetText("/gmotd ")
-		end
+		editBox:Show()
+		editBox:SetText("/gmotd ")
 	end
 end
 
@@ -5978,7 +6479,8 @@ function MainGuildFrame_OnLoad()
 end
 
 function MainGuildFrame_OnShow()
-	guildScrollOffset = 0
+	ResetScroll()
+	ClearPendingRefresh()
 	guildSelectedName = nil
 	RequestRoster()
 	Refresh()
@@ -5992,21 +6494,74 @@ end
 
 function MainGuildFrame_OnUpdate(elapsed)
 	this.elapsed = (this.elapsed or 0) + elapsed
-	if this.elapsed < 0.5 then return end
+	if this.elapsed < 0.1 then return end
 	this.elapsed = 0
+
+	if guildRefreshPending then
+		local now = GetTime and GetTime() or 0
+
+		if guildRefreshAt and now >= guildRefreshAt then
+			RequestRoster(1)
+			guildRefreshAt = nil
+		end
+		if guildRefreshRetryAt and now >= guildRefreshRetryAt then
+			RequestRoster(1)
+			guildRefreshRetryAt = nil
+		end
+		if guildRefreshExpiresAt and now >= guildRefreshExpiresAt then
+			ClearPendingRefresh()
+			UpdateButtons()
+		end
+	end
 
 	local roster = Main.API and Main.API:GetGuildRoster() or {}
 	if roster.loaded then
+		ClearPendingRefresh()
 		Refresh()
 		roster.loaded = nil
 	end
 end
 
 function MainGuildFrame_OnHide()
+	ClearPendingRefresh()
 	guildSelectedName = nil
 end
 
 local mainGuildOriginalFriendsFrameUpdate = nil
+
+local function MainGuildFrame_HookGuildActions()
+	if not mainGuildOriginalGuildPromoteByName and GuildPromoteByName then
+		mainGuildOriginalGuildPromoteByName = GuildPromoteByName
+		GuildPromoteByName = function(name)
+			mainGuildOriginalGuildPromoteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildDemoteByName and GuildDemoteByName then
+		mainGuildOriginalGuildDemoteByName = GuildDemoteByName
+		GuildDemoteByName = function(name)
+			mainGuildOriginalGuildDemoteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildUninviteByName and GuildUninviteByName then
+		mainGuildOriginalGuildUninviteByName = GuildUninviteByName
+		GuildUninviteByName = function(name)
+			mainGuildOriginalGuildUninviteByName(name)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+
+	if not mainGuildOriginalGuildSetMOTD and GuildSetMOTD then
+		mainGuildOriginalGuildSetMOTD = GuildSetMOTD
+		GuildSetMOTD = function(message)
+			mainGuildOriginalGuildSetMOTD(message)
+			QueuePendingRefreshIfVisible()
+		end
+	end
+end
 
 local function MainGuildFrame_HookFriendsFrame()
 	if mainGuildOriginalFriendsFrameUpdate then
@@ -6043,6 +6598,7 @@ local function MainGuildFrame_HookFriendsFrame()
 end
 
 function MainGuildFrame:Init()
+	MainGuildFrame_HookGuildActions()
 	MainGuildFrame_HookFriendsFrame()
 end
 
