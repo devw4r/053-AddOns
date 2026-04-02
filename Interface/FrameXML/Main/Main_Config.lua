@@ -18,6 +18,7 @@ Main.Config = {
 		class_portraits = 14,
 		guild_frame = 15,
 		always_track = 16,
+		atlas_loot = 17,
 	},
 	defaults = {
 		modules = {
@@ -38,6 +39,7 @@ Main.Config = {
 			class_portraits = true,
 			guild_frame = true,
 			always_track = false,
+			atlas_loot = true,
 		},
 		settings = {
 		},

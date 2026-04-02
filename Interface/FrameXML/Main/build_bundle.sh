@@ -23,6 +23,8 @@ source_files=(
   "ClientTweaks.lua"
   "ClassPortraits.lua"
   "GuildFrame.lua"
+  "AtlasLoot_Data.lua"
+  "AtlasLoot.lua"
   "Main_Slash.lua"
 )
 

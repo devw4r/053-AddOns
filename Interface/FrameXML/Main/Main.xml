@@ -1411,6 +1411,312 @@
 		</Scripts>
 	</Frame>
 
+	<Button name="MainAtlasLootButton" parent="UIParent" frameStrata="LOW" enableMouse="true" hidden="true">
+		<Size>
+			<AbsDimension x="26" y="26"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOM" relativeTo="CombatLogUpButton" relativePoint="TOP">
+				<Offset>
+					<AbsDimension x="0" y="4"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="MainAtlasLootButtonIcon" file="Interface\WorldMap\WorldMap-Icon" setAllPoints="true"/>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+		<Scripts>
+			<OnClick>
+				MainAtlasLootLauncherButton_OnClick()
+			</OnClick>
+			<OnEnter>
+				MainAtlasLootLauncherButton_OnEnter()
+			</OnEnter>
+			<OnLeave>
+				MainAtlasLootLauncherButton_OnLeave()
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<Frame name="MainAtlasFrame" toplevel="true" parent="UIParent" frameStrata="DIALOG" hidden="true" enableMouse="true" movable="true">
+		<Size>
+			<AbsDimension x="512" y="512"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+		</Backdrop>
+		<TitleRegion>
+			<Size>
+				<AbsDimension x="512" y="48"/>
+			</Size>
+			<Anchors>
+				<Anchor point="TOP"/>
+			</Anchors>
+		</TitleRegion>
+		<Frames>
+			<Button name="MainAtlasCloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="MainAtlasFrame" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-5" y="-5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainAtlasCloseButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="MainAtlasTitleFrame">
+				<Size>
+					<AbsDimension x="300" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset>
+							<AbsDimension x="0" y="-16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="MainAtlasTitleText" inherits="GameFontHighlightLarge" justifyH="CENTER">
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="MainAtlasMapFrame">
+				<Size>
+					<AbsDimension x="320" y="384"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainAtlasFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="24" y="-110"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture name="MainAtlasMap" setAllPoints="true"/>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="MainAtlasInfoFrame">
+				<Size>
+					<AbsDimension x="140" y="384"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainAtlasFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="360" y="-110"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+						<Layer level="OVERLAY">
+							<FontString name="MainAtlasInfoText" inherits="GameFontNormal" justifyH="LEFT">
+								<Size>
+									<AbsDimension x="140" y="190"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT"/>
+								</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="MainAtlasLootFrame">
+				<Size>
+					<AbsDimension x="140" y="240"/>
+				</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="MainAtlasInfoFrame" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-205"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				<Frames>
+					<Button name="MainAtlasLootButton1" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT"/></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton2" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton1" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton3" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton1" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-4"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton4" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton3" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton5" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton3" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-4"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton6" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton5" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton7" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-4"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+					<Button name="MainAtlasLootButton8" inherits="ItemButtonTemplate">
+						<Anchors><Anchor point="TOPLEFT" relativeTo="MainAtlasLootButton7" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
+						<Scripts><OnEnter>MainAtlasLootButton_OnEnter()</OnEnter><OnLeave>MainAtlasLootButton_OnLeave()</OnLeave><OnClick>MainAtlasLootButton_OnClick()</OnClick></Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+			<Button name="MainAtlasInstancePrevButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="22" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainAtlasFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="24" y="-44"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainAtlasInstancePrevButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="MainAtlasInstanceSelector">
+				<Size>
+					<AbsDimension x="180" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainAtlasInstancePrevButton" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="4" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="MainAtlasInstanceText" inherits="GameFontHighlightSmall" justifyH="CENTER">
+							<Size>
+								<AbsDimension x="180" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button name="MainAtlasInstanceNextButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="22" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainAtlasInstanceSelector" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="4" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainAtlasInstanceNextButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MainAtlasBossPrevButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="22" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="MainAtlasFrame" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="24" y="-72"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainAtlasBossPrevButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="MainAtlasBossSelector">
+				<Size>
+					<AbsDimension x="180" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainAtlasBossPrevButton" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="4" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="MainAtlasBossText" inherits="GameFontHighlightSmall" justifyH="CENTER">
+							<Size>
+								<AbsDimension x="180" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button name="MainAtlasBossNextButton" inherits="UIPanelButtonTemplate">
+				<Size>
+					<AbsDimension x="22" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="MainAtlasBossSelector" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="4" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MainAtlasBossNextButton_OnClick()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				MainAtlasFrame_OnLoad()
+			</OnLoad>
+			<OnShow>
+				MainAtlasFrame_OnShow()
+			</OnShow>
+		</Scripts>
+	</Frame>
+
 	<Frame name="MainMergedBagsBagTemplate" virtual="true">
 		<Frames>
 			<Button name="$parentItem1" inherits="ContainerFrameItemButtonTemplate"/>
