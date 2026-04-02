@@ -10,6 +10,10 @@ local GUILD_ROW_HEIGHT = 16
 local GUILD_REFRESH_DELAY = 0.25
 local GUILD_REFRESH_RETRY_DELAY = 0.8
 local GUILD_REFRESH_TIMEOUT = 3.5
+local GUILD_ACTION_ROW_SAFE_LEFT = 21
+local GUILD_ACTION_ROW_SAFE_RIGHT = 341
+local GUILD_ACTION_ROW_BOTTOM = 107
+local GUILD_ACTION_BUTTON_WIDTH = 60
 local GUILD_RANK_NAMES = {
 	[0] = "Guild Master",
 	[1] = "Officer",
@@ -235,6 +239,42 @@ local function UpdateHeader()
 	end
 end
 
+local function LayoutOfficerButtons(buttons)
+	local count = Main_ArrayCount(buttons)
+	local rowLeft = GUILD_ACTION_ROW_SAFE_LEFT
+	local rowRight = GUILD_ACTION_ROW_SAFE_RIGHT
+	local totalWidth
+	local gap = 0
+	local startX = rowLeft
+	local index
+	local button
+
+	if count <= 0 then
+		return
+	end
+
+	totalWidth = rowRight - rowLeft
+	if count > 1 then
+		gap = (totalWidth - (count * GUILD_ACTION_BUTTON_WIDTH)) / (count - 1)
+	else
+		startX = rowLeft + ((totalWidth - GUILD_ACTION_BUTTON_WIDTH) / 2)
+	end
+
+	for index = 1, count do
+		button = buttons[index]
+		if button and button.ClearAllPoints and button.SetPoint then
+			button:ClearAllPoints()
+			button:SetPoint(
+				"BOTTOMLEFT",
+				"MainGuildFrame",
+				"BOTTOMLEFT",
+				startX + ((index - 1) * (GUILD_ACTION_BUTTON_WIDTH + gap)),
+				GUILD_ACTION_ROW_BOTTOM
+			)
+		end
+	end
+end
+
 UpdateButtons = function()
 	local playerRank = GetPlayerRank()
 	local selected = GetSelectedMember()
@@ -252,11 +292,22 @@ UpdateButtons = function()
 	local whisperBtn = getglobal("MainGuildFrameWhisperButton")
 	local groupInvBtn = getglobal("MainGuildFrameGroupInviteButton")
 	local motdBtn = getglobal("MainGuildFrameSetMotdButton")
+	local officerButtons = {}
+	local officerButtonCount = 0
+
+	local function AddOfficerButton(button)
+		if not button then
+			return
+		end
+		officerButtonCount = officerButtonCount + 1
+		officerButtons[officerButtonCount] = button
+	end
 
 	-- Show/hide officer buttons based on rank
 	if promoteBtn then
 		if canManage then
 			promoteBtn:Show()
+			AddOfficerButton(promoteBtn)
 			if isRefreshing then
 				promoteBtn:Disable()
 			elseif hasSelection and not isSelf and selected.rank > (playerRank + 1) then
@@ -272,6 +323,7 @@ UpdateButtons = function()
 	if demoteBtn then
 		if canManage then
 			demoteBtn:Show()
+			AddOfficerButton(demoteBtn)
 			if isRefreshing then
 				demoteBtn:Disable()
 			elseif hasSelection and not isSelf and selected.rank > playerRank and selected.rank < 4 then
@@ -287,6 +339,7 @@ UpdateButtons = function()
 	if removeBtn then
 		if canManage then
 			removeBtn:Show()
+			AddOfficerButton(removeBtn)
 			if isRefreshing then
 				removeBtn:Disable()
 			elseif hasSelection and not isSelf and selected.rank > playerRank then
@@ -302,6 +355,7 @@ UpdateButtons = function()
 	if inviteBtn then
 		if canManage then
 			inviteBtn:Show()
+			AddOfficerButton(inviteBtn)
 			if isRefreshing then
 				inviteBtn:Disable()
 			else
@@ -315,6 +369,7 @@ UpdateButtons = function()
 	if motdBtn then
 		if IsGuildMaster() then
 			motdBtn:Show()
+			AddOfficerButton(motdBtn)
 			if isRefreshing then
 				motdBtn:Disable()
 			else
@@ -324,6 +379,8 @@ UpdateButtons = function()
 			motdBtn:Hide()
 		end
 	end
+
+	LayoutOfficerButtons(officerButtons)
 
 	if whisperBtn then
 		if hasSelection and not isSelf and selectedOnline then
